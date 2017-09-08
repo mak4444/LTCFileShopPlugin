@@ -77,13 +77,6 @@ class Plugin(BasePlugin):
     global quest_obj
     Server = None
     def __init__(self, parent, config, name):
-        #global NFlPrice
-        #global NFlTrFee
-        #global FlPrice
-        #global FlTrFee
-        #global OFlPrice
-        #global OFlTrFee
-        #global ReceivAddress
 
         BasePlugin.__init__(self, parent, config, name)
 
@@ -133,14 +126,6 @@ class Plugin(BasePlugin):
         return EnterButton( ('Settings'), partial(self.settings_dialog, window))
 
     def settings_dialog(self, window):
-        #global NFlPrice
-        #global NFlTrFee
-        #global FlPrice
-        #global FlTrFee
-        #global OFlPrice
-        #global OFlTrFee
-        #global ReceivAddress
-        #global FileShopPath
 
         d = WindowModalDialog(window, ("FileShop settings"))
         d.setMinimumSize(500, 200)
@@ -169,7 +154,7 @@ class Plugin(BasePlugin):
         OFlPrice_e.setText("%s"%FileShop.OFlPrice)
         grid.addWidget(OFlPrice_e, 1, 3)
 
-        grid.addWidget(QLabel('Fee'), 2, 0)
+        grid.addWidget(QLabel('Fee/Kb'), 2, 0)
 
         NFlTrFee_e = QLineEdit()
         NFlTrFee_e.setText("%s"%FileShop.NFlTrFee)

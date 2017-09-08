@@ -134,13 +134,13 @@ class BuyerServer(QThread):
        QThread.__init__(self)
 
     def run(self):
-        server = HTTPServer(('localhost', 8120), GetHandler)
-        server.serve_forever()
+        self.server = HTTPServer(('localhost', 8120), GetHandler)
+        self.server.serve_forever()
 
     def SStop(self):
-       self.server.shutdown()
-       self.server.server_close()
-       self.quit()
+        self.server.shutdown()
+        self.server.server_close()
+        self.quit()
 
 class Plugin(BasePlugin):
     global quest_obj

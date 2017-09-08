@@ -23,16 +23,15 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-#FlPrice = 1.7
-#FlTrFee = 0.3
 NFlPrice = 0.7
 NFlTrFee = 0.1
 FlPrice = 0.01
 FlTrFee = 0.001
-OFlPrice = 0.0001
-OFlTrFee = 0.00001
+OFlPrice = 0.0
+OFlTrFee = 0.0
 MemPoolLimit = 0.1 
 Transactions = {}
+Tr4del = []
 FilePP = {}
 ReceivAddress = ''
 
@@ -163,6 +162,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return 1
     
     def do_PUT(self):
+	global Tr4del
         self.wfile.write("ok\r\n")
         csum = 0
         for char in self.RowTransaction:
@@ -170,9 +170,19 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         csum %= 0x10**8
         self.FileID = csum 
         print("mmoTransaction=",self.RowTransaction,csum)
+
+        # so that the buffer does not grow larger
+        try:
+            Tr4del.remove(csum)
+        except:
+            pass                    
+        if len(Tr4del) > 9:
+            print("del Tr4del[0]=",Tr4del[0],len(Tr4del))
+            del Transactions[Tr4del[0]]
+            del Tr4del[0]
+
         Transactions[csum]=self.RowTransaction # self.TransactionTst()
-        
-        
+        Tr4del.append(csum)        
 
     def handle_one_request(self):
         """Handle a single HTTP request.
@@ -335,5 +345,4 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 class ThreadedHTTPServer(ThreadingMixIn, SocketServer.TCPServer):
     """Handle requests in a separate thread."""
-
 
