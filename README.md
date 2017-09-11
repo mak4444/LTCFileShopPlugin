@@ -4,7 +4,7 @@
  Этот плагины предназначены для удобной купли/продажи дешевых файлов. 
  Лайткоин выбран из-за низкой комиссии.
  Файл отдается мгновенно за транзакцию.
- Предполагается, что ради такой мелочи нет смысла даблспендить.
+ Предполагается, что ради такой мелочи нет смысла специально даблспендить.
  Для выставления файла на продажу, достаточно записать его
  в специальный каталог (по умолчанию Electrum-ltc-shop).
  Путь к этому каталогу прописан в установках при плагине.
@@ -25,8 +25,8 @@
  This plugins is designed for convenient purchase/sale of cheap files.
  The Litecoin was selected because of low fee.
  The file is given instantly to the transaction.
- It is assumed that for the sake of such cheap,
- there is no sense in double-spending.
+ It is assumed that for thes sake of such cheap,
+ there is no sense in specifically double-spending.
  To put the file on sale, just write it down
  in a special catalog (default Electrum-ltc-shop).
  The path to this directory is registered in the settings for the plugin.
