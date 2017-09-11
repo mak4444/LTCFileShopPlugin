@@ -70,7 +70,9 @@ class GetHandler(BaseHTTPRequestHandler):
             precv = quest_recv.split(';')
             tquestion = "Amount = %sLTC\nFee = %sLTC\nTime = %s"%( precv[0],precv[1], str(datetime.datetime.fromtimestamp(float( precv[2]))) )
 
-            #WaitingDialog(parent, tquestion, sender_thread)
+            if float(precv[0]) + float(precv[1]) > 1.0 :
+                 self.send_error(404, "too expensive")
+                 return
 
             quest_result = None # QMessageBox.NoButton
 
