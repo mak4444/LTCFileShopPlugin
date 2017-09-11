@@ -66,10 +66,10 @@ class Plugin(BasePlugin):
         ReceivAddress = self.config.get('ReceivAddress', ReceivAddress)
                       
         if(self.Server == None):
-           #self.Server = ThreadedHTTPServer(('', 8008), CmFSHandler)
-           #self.Server.serve_forever()
-           self.Server = FileServer()
-           #self.Server.start()
+            #self.Server = ThreadedHTTPServer(('', 8008), CmFSHandler)
+            #self.Server.serve_forever()
+            self.Server = FileServer()
+            #self.Server.start()
 
            
 
@@ -79,10 +79,10 @@ class Plugin(BasePlugin):
         print('load_wallet',self, wallet, window)
 
     def close(self):
-       self.Server.SStop()
-       #self.server.shutdown()
-       #self.server.server_close()
-       #self.quit()
+        self.Server.SStop()
+        #self.server.shutdown()
+        #self.server.server_close()
+        #self.quit()
 
     handler = FHHandler()
     

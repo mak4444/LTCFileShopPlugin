@@ -61,17 +61,17 @@ class GFSHandler(FSHandler):
 
 class FileServer(QThread):
     def __init__(self):
-       QThread.__init__(self)
+        QThread.__init__(self)
 
     def run(self):
-       self.server = ThreadedHTTPServer(('', 8008), GFSHandler)
-       #server = HTTPServer(('', 8008), GFSHandler)
-       self.server.serve_forever()
+        self.server = ThreadedHTTPServer(('', 8008), GFSHandler)
+        #server = HTTPServer(('', 8008), GFSHandler)
+        self.server.serve_forever()
        
     def SStop(self):
-       self.server.shutdown()
-       self.server.server_close()
-       self.quit()
+        self.server.shutdown()
+        self.server.server_close()
+        self.quit()
 
 class Plugin(BasePlugin):
     global quest_obj
@@ -98,8 +98,8 @@ class Plugin(BasePlugin):
 
               
         if(self.Server == None):
-           self.Server = FileServer()
-           self.Server.start()
+            self.Server = FileServer()
+            self.Server.start()
 
     def close(self):
         self.Server.SStop()

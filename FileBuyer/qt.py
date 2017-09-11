@@ -71,19 +71,19 @@ class GetHandler(BaseHTTPRequestHandler):
             tquestion = "Amount = %sLTC\nFee = %sLTC\nTime = %s"%( precv[0],precv[1], str(datetime.datetime.fromtimestamp(float( precv[2]))) )
 
             if float(precv[0]) + float(precv[1]) > 1.0 :
-                 self.send_error(404, "too expensive")
-                 return
+                self.send_error(404, "too expensive")
+                return
 
             quest_result = None # QMessageBox.NoButton
 
             quest_obj.emit(SIGNAL('BuyerServerSig'))
 
             while quest_result == None: # QMessageBox.NoButton:
-               time.sleep(0.1)
+                time.sleep(0.1)
 
             if not quest_result:
-                 self.send_error(404, "Cancel")
-                 return
+                self.send_error(404, "Cancel")
+                return
 
             print('DO_raw_xt', raw_xt)
 
@@ -133,7 +133,7 @@ class GetHandler(BaseHTTPRequestHandler):
 #class BuyerServer(threading.Thread):
 class BuyerServer(QThread):
     def __init__(self):
-       QThread.__init__(self)
+        QThread.__init__(self)
 
     def run(self):
         self.server = HTTPServer(('localhost', 8120), GetHandler)
@@ -153,8 +153,8 @@ class Plugin(BasePlugin):
         self.obj.connect(quest_obj, SIGNAL('BuyerServerSig'), self.new_question)
               
         if(self.Server == None):
-           self.Server = BuyerServer()
-           self.Server.start()
+            self.Server = BuyerServer()
+            self.Server.start()
 
     def close(self):
         self.Server.SStop()

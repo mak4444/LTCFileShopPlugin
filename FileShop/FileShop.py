@@ -23,10 +23,10 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-NFlPrice = 0.7
-NFlTrFee = 0.1
+NFlPrice = 0.06
+NFlTrFee = 0.005
 FlPrice = 0.01
-FlTrFee = 0.001
+FlTrFee = 0.004
 OFlPrice = 0.0
 OFlTrFee = 0.0
 MemPoolLimit = 0.1 
@@ -308,7 +308,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                         
             self.FileID = 0
             for char in self.path[10:]:
-                 self.FileID += ord(char)                
+                self.FileID += ord(char)                
             
             print('self.FileID',self.FileID,self.path[10:])
             
