@@ -18,9 +18,9 @@ import os, sys, posixpath
 import datetime
 import time
 
+import FileShop
 from FileShop import *
 
-from electrum_ltc.util import print_msg
 
 
 class CmFSHandler(FSHandler):
@@ -29,22 +29,33 @@ class CmFSHandler(FSHandler):
         global GRowTransaction
         global GFileID
         global Tx_res
+        FileShop.TLock.acquire()
+        GRowTransaction = self.RowTransaction
+        GFileID = self.FileID
+        Tx_res = None
+        #quest_obj.emit(SIGNAL('FShopServerSig'))
+        #while Tx_res == None:
+        #    time.sleep(0.1)
+        Tx_res = 1
+        Txres = Tx_res
+        FileShop.TLock.release()
+        return Txres
 
 
 class FileServer(Thread):
     def __init__(self):
-       Thread.__init__(self)
+        Thread.__init__(self)
 
     def run(self):
-       print('FileServer IS RUN')
-       self.server = ThreadedHTTPServer(('', 8008), CmFSHandler)
-       self.server.serve_forever()
+        print('FileServer IS RUN')
+        self.server = ThreadedHTTPServer(('', 8008), CmFSHandler)
+        self.server.serve_forever()
        
     def SStop(self):
-       print('FileServer IS STOP')
-       self.server.shutdown()
-       self.server.server_close()
-       self.quit()
+        print('FileServer IS STOP')
+        self.server.shutdown()
+        self.server.server_close()
+        self.quit()
 
 class FHHandler:
     def stop(self):
@@ -61,15 +72,24 @@ class Plugin(BasePlugin):
         
         BasePlugin.__init__(self, parent, config, name)
 
-        FlPrice = self.config.get('FlPrice', FlPrice)
-        FlTrFee = self.config.get('FlTrFee', FlTrFee)
-        ReceivAddress = self.config.get('ReceivAddress', ReceivAddress)
+        FileShop.NFlPrice = self.config.get('NFlPrice', FileShop.NFlPrice)
+        FileShop.NFlTrFee = self.config.get('NFlTrFee', FileShop.NFlTrFee)
+
+        FileShop.FlPrice = self.config.get('FlPrice', FileShop.FlPrice)
+        FileShop.FlTrFee = self.config.get('FlTrFee', FileShop.FlTrFee)
+
+        FileShop.OFlPrice = self.config.get('OFlPrice', FileShop.OFlPrice)
+        FileShop.OFlTrFee = self.config.get('OFlTrFee', FileShop.OFlTrFee)
+
+        FileShop.MemPoolLimit = self.config.get('MemPoolLimit', FileShop.MemPoolLimit)       
+        
+        FileShop.ReceivAddress = self.config.get('ReceivAddress', FileShop.ReceivAddress)
                       
         if(self.Server == None):
             #self.Server = ThreadedHTTPServer(('', 8008), CmFSHandler)
             #self.Server.serve_forever()
             self.Server = FileServer()
-            #self.Server.start()
+            self.Server.start()
 
            
 
