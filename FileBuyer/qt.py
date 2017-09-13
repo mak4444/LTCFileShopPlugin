@@ -1,5 +1,6 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
+import PyQt4.QtCore as QtCore
 
 from electrum_ltc.plugins import BasePlugin, hook
 from electrum_ltc_gui.qt.util import WindowModalDialog , Buttons , CancelButton, OkButton
@@ -144,6 +145,15 @@ class BuyerServer(QThread):
         self.server.server_close()
         self.quit()
 
+'''
+class ApplicationModalDialogL(QDialog, MessageBoxMixin):
+    def __init__(self, parent, title=None):
+        QDialog.__init__(self, parent)
+        self.setWindowModality(Qt.WindowModal)
+        #self.setWindowModality(Qt.ApplicationModal)
+        if title:
+            self.setWindowTitle(title)
+'''
 class Plugin(BasePlugin):
     global quest_obj
     Server = None
@@ -174,6 +184,9 @@ class Plugin(BasePlugin):
         vbox = QVBoxLayout(d)
         vbox.addWidget(QLabel(self.tquestion))
         vbox.addLayout(Buttons(CancelButton(d), OkButton(d)))
+
+        d.show()
+        d.activateWindow()
         return d.exec_()
             #self.window.set_contact(unicode(line2.text()), str(line1.text()))
 
@@ -214,14 +227,17 @@ class Plugin(BasePlugin):
             self.window.show_message(str(e))
             quest_result = 0
             return
-
         
-        self.window.show_transaction(quest_tx, u'')
+        #self.window.show_transaction(quest_tx, u'')
         tx_hash, status, label, can_broadcast, can_rbf, amount, fee, height, conf, timestamp, exp_n = self.window.wallet.get_tx_info(quest_tx)
         
         if fee==None:
             fee = 0
-            
+
+        if amount + fee == 0: #!!!!!!!!!
+            quest_result = True
+            return
+
         time_str = str(datetime.datetime.fromtimestamp(float( self.precv[2])))
         self.tquestion = "Amount = %fLTC\nFee = %sLTC\nTime = %s"%( amount / 10.**8   , fee / 10.**8 , time_str )
         
