@@ -244,14 +244,20 @@ class Plugin(BasePlugin):
             return       
         try:        
             is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
-            #tx_hash, status, label, can_broadcast, can_rbf, amount, fee, height, conf, timestamp, exp_n = self.window.wallet.get_tx_info(XTr)
-            #print('get_tx_info=',tx_hash, status, label, can_broadcast, can_rbf, amount, fee, height, conf, timestamp, exp_n)
+            InputAdrs = {}
+            for x in XTr.inputs():
+                InputAdrs[x['address']]=None
+            for x in InputAdrs:
+                InputAdrs[x]=self.window.network.synchronous_get(('blockchain.address.listunspent', [x]))
+
             fee = 0
             amount = 0
+
             for x in XTr.inputs():
-                anwb = self.window.network.synchronous_get(('blockchain.address.get_balance', [x['address']]))
-                fee += anwb["confirmed"] # int(anwb["confirmed"],base=10) # Decimal(anwb["confirmed"])
-                print('network=',anwb,amount)
+                print(InputAdrs[x['address']] )
+                for y in InputAdrs[x['address']]:
+                    if y['tx_hash'] == x['prevout_hash']:
+                        fee += int( y['value'])
 
             amount = 0
             for addr, value in XTr.get_outputs():

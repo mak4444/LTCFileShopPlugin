@@ -21,8 +21,6 @@ import time
 import FileShop
 from FileShop import *
 
-
-
 class CmFSHandler(FSHandler):
     def TransactionTst(self):
         global quest_obj
@@ -40,7 +38,6 @@ class CmFSHandler(FSHandler):
         Txres = Tx_res
         FileShop.TLock.release()
         return Txres
-
 
 class FileServer(Thread):
     def __init__(self):
@@ -86,17 +83,8 @@ class Plugin(BasePlugin):
         FileShop.ReceivAddress = self.config.get('ReceivAddress', FileShop.ReceivAddress)
                       
         if(self.Server == None):
-            #self.Server = ThreadedHTTPServer(('', 8008), CmFSHandler)
-            #self.Server.serve_forever()
             self.Server = FileServer()
             self.Server.start()
-
-           
-
-    #handler = DigitalBitboxCmdLineHandler()
-    @hook
-    def load_wallet(self, wallet, window):
-        print('load_wallet',self, wallet, window)
 
     def close(self):
         self.Server.SStop()

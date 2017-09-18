@@ -5,11 +5,6 @@ import PyQt4.QtCore as QtCore
 from electrum_ltc.plugins import BasePlugin, hook
 from electrum_ltc_gui.qt.util import WindowModalDialog , Buttons , CancelButton, OkButton
 from electrum_ltc.util import *
-''' (block_explorer, block_explorer_info, format_time,
-                               block_explorer_URL, format_satoshis, PrintError,
-                               format_satoshis_plain, NotEnoughFunds,
-                               UserCancelled)
-'''
 from electrum_ltc.transaction import Transaction
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -40,9 +35,6 @@ class GetHandler(BaseHTTPRequestHandler):
         myreferer =  self.headers.get('referer', "").split('/') #  ['http:', '', 'localhost:8008', '']
         self.BTCTransaction = "123" # " BTC Transaction "
         print ("myreferer=",myreferer)
-        #bWidget = QWidget()
-        #bWidget.focus()
-
 
         if  len(myreferer) > 1: 
 
@@ -66,7 +58,6 @@ class GetHandler(BaseHTTPRequestHandler):
             quest_recv =  bsocet.recv(1024).rstrip()
             print ("TransactionParam=",quest_recv)
             bsocet.close()
-            #self.BTCTransaction = 'make' + quest_recv
 
             precv = quest_recv.split(';')
             tquestion = "Amount = %sLTC\nFee = %sLTC\nTime = %s"%( precv[0],precv[1], str(datetime.datetime.fromtimestamp(float( precv[2]))) )
@@ -75,11 +66,11 @@ class GetHandler(BaseHTTPRequestHandler):
                 self.send_error(404, "too expensive")
                 return
 
-            quest_result = None # QMessageBox.NoButton
+            quest_result = None
 
             quest_obj.emit(SIGNAL('BuyerServerSig'))
 
-            while quest_result == None: # QMessageBox.NoButton:
+            while quest_result == None:
                 time.sleep(0.1)
 
             if not quest_result:
@@ -103,11 +94,7 @@ class GetHandler(BaseHTTPRequestHandler):
             csum = 0
             for char in self.BTCTransaction:
                 csum += csum + ord(char)
-            #for char in self.path:
-            #    csum += ord(char)
             csum %= 0x10**8
-        #self.wfile.write("HTTP/1.1 303 See Other\nLocation: http://localhost:8120/$0000"+self.path)
-            #httpsend = "HTTP/1.1 303 See Other\nLocation: " + myreferer[0] + "//" +  myreferer[2] + "/%08X$"%csum +self.path 
             httpsend = "Location: " + myreferer[0] + "//" +  myreferer[2] + "/%08X$"%csum +self.path 
             print("to browser",csum,httpsend,">")
             self.wfile.write(httpsend)
@@ -130,8 +117,6 @@ class GetHandler(BaseHTTPRequestHandler):
             elif value.lower() == 'keep-alive':
                 self.close_connection = 0
 
-
-#class BuyerServer(threading.Thread):
 class BuyerServer(QThread):
     def __init__(self):
         QThread.__init__(self)
@@ -145,15 +130,6 @@ class BuyerServer(QThread):
         self.server.server_close()
         self.quit()
 
-'''
-class ApplicationModalDialogL(QDialog, MessageBoxMixin):
-    def __init__(self, parent, title=None):
-        QDialog.__init__(self, parent)
-        self.setWindowModality(Qt.WindowModal)
-        #self.setWindowModality(Qt.ApplicationModal)
-        if title:
-            self.setWindowTitle(title)
-'''
 class Plugin(BasePlugin):
     global quest_obj
     Server = None
@@ -188,7 +164,6 @@ class Plugin(BasePlugin):
         d.show()
         d.activateWindow()
         return d.exec_()
-            #self.window.set_contact(unicode(line2.text()), str(line1.text()))
 
     def new_question(self):
         global quest_result
@@ -223,7 +198,6 @@ class Plugin(BasePlugin):
             quest_result = 0
             return
         except BaseException as e:
-            #traceback.print_exc(file=sys.stdout)
             self.window.show_message(str(e))
             quest_result = 0
             return
@@ -234,7 +208,7 @@ class Plugin(BasePlugin):
         if fee==None:
             fee = 0
 
-        if amount + fee == 0: #!!!!!!!!!
+        if amount + fee == 0:
             quest_result = True
             return
 
@@ -246,6 +220,4 @@ class Plugin(BasePlugin):
 
         print('dialog=', quest_result)
         
-
-        #while True:             time.sleep(2)             print("new_question",quest_result )    
         

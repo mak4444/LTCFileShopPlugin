@@ -113,7 +113,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         displaypath = cgi.escape(urllib.unquote(self.path))
         f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
         f.write("<html>\n<title>File Shop %s</title>\n" % displaypath)
-        f.write("<body>\n<h2>The <a href=\"https://github.com/mak4444/LTCFileShopPlugin\">Electrum plugin</a> is needed</h2>\n")
+        f.write("<body>\n<h2>The running <a href=\"https://github.com/mak4444/LTCFileShopPlugin\">Electrum-ltc plugin</a> is needed for downloading</h2>\n")
         f.write("<hr>\n<ul>\n")
         f.write("<table border=\"1\"> <tr> <th>Name</th><th>Size</th><th>Modify time</th> <th>Price LTC</th>  <th>Tr Fee LTC/kB </th> </tr>")
         for name in list:
@@ -157,8 +157,6 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return f
 
     def TransactionTst(self):
-        #global GRowTransaction
-        #GRowTransaction = self.RowTransaction
         return 1
     
     def do_PUT(self):
