@@ -23,10 +23,10 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-NFlPrice = 0.06
-NFlTrFee = 0.005
+NFlPrice = 0.04
+NFlTrFee = 0.002
 FlPrice = 0.01
-FlTrFee = 0.004
+FlTrFee = 0.001
 OFlPrice = 0.0
 OFlTrFee = 0.0
 MemPoolLimit = 0.1 
@@ -191,9 +191,9 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         """
         try:
-            print("rfile.readline")
+            #print("rfile.readline")
             self.raw_requestline = self.rfile.readline(65537)
-            print("nextL0=",self.raw_requestline)
+            #print("nextL0=",self.raw_requestline)
             if len(self.raw_requestline) > 65536:
                 self.requestline = ''
                 self.request_version = ''
@@ -243,16 +243,16 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         None, in which case the caller has nothing further to do.
 
         """
-        for name, value in self.headers.items():
-            print('mmo%s=%s' % (name, value.rstrip()))
+        #for name, value in self.headers.items():
+        #    print('mmo%s=%s' % (name, value.rstrip()))
         path = self.translate_path(self.path)
         f = None
-        print("mmopath=<",path,">")
+        #print("mmopath=<",path,">")
         if os.path.isdir(path):
             parts = urlparse.urlsplit(self.path)
             return self.list_directory(path)
             
-        print("mmoself.path=<",self.path,">")
+        #print("mmoself.path=<",self.path,">")
         if len(self.path) < 8 :
             self.wfile.write("HTTP/1.1 303 See Other\nLocation: http://localhost:8120"+self.path)
             self.wfile.write("\nContent-Length: 0\nConnection: close\n\n")
@@ -287,16 +287,16 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     FileID = 0
                     for char in self.path:
                         FileID += ord(char)
-                    print('FileID',FileID,self.path)
+                    #print('FileID',FileID,self.path)
                     FilePP[FileID] = (HFlPrice,HFlTrFee,time.mktime(time.gmtime()))
                     self.wfile.write("%s;%s;%s;%s\r\n"%(HFlPrice,HFlTrFee,time.mktime(time.gmtime()),ReceivAddress))
                     return f
             
             try:
-                print('IDTransactions=',self.path[1:9])
+                #print('IDTransactions=',self.path[1:9])
                 IDTran = int(self.path[1:9],base=16)
 
-                print('Transactions=',Transactions[IDTran])
+                #print('Transactions=',Transactions[IDTran])
                 
             except KeyError:
                 self.send_error(404, "Transaction not found")
@@ -308,14 +308,14 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             for char in self.path[10:]:
                 self.FileID += ord(char)                
             
-            print('self.FileID',self.FileID,self.path[10:])
+            #print('self.FileID',self.FileID,self.path[10:])
             
             path= self.path.split('$')[1]
             path = self.translate_path(path)           
 
         try:
             ctype = self.guess_type(path)
-            print("mmoopen.path=<",path,">")
+            #print("mmoopen.path=<",path,">")
             # Always read in binary mode. Opening files in text mode may cause
             # newline translations, making the actual size of the content
             # transmitted *less* than the content-length!

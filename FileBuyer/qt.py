@@ -20,6 +20,7 @@ quest_obj = QObject()
 quest_result = None
 quest_recv = None
 raw_xt = None
+fuse = 1.
 
 class GetHandler(BaseHTTPRequestHandler):
 
@@ -34,7 +35,7 @@ class GetHandler(BaseHTTPRequestHandler):
         global raw_xt
         myreferer =  self.headers.get('referer', "").split('/') #  ['http:', '', 'localhost:8008', '']
         self.BTCTransaction = "123" # " BTC Transaction "
-        print ("myreferer=",myreferer)
+        #print("myreferer=",myreferer)
 
         if  len(myreferer) > 1: 
 
@@ -44,7 +45,7 @@ class GetHandler(BaseHTTPRequestHandler):
             BShopPort = 80
             if len(BShop) == 2:
                 BShopPort = int(BShop[1])
-            print("mmoco=<",BShop[0],BShopPort,">")
+            #print("mmoco=<",BShop[0],BShopPort,">")
             if BShopPort == 8120:
                 self.send_error(404, "File not found")
                 return
@@ -53,17 +54,17 @@ class GetHandler(BaseHTTPRequestHandler):
             bsocet = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             bsocet.connect((BShop[0],BShopPort))
             httpsend = "GET " + "/ltc00000$" +self.path + "\r\n\r\n" 
-            print("TransactionParam parameters query",httpsend,">")
+            #print("TransactionParam parameters query",httpsend,">")
             bsocet.send(httpsend)
             quest_recv =  bsocet.recv(1024).rstrip()
-            print ("TransactionParam=",quest_recv)
+            #print ("TransactionParam=",quest_recv)
             bsocet.close()
 
             precv = quest_recv.split(';')
             tquestion = "Amount = %sLTC\nFee = %sLTC\nTime = %s"%( precv[0],precv[1], str(datetime.datetime.fromtimestamp(float( precv[2]))) )
 
-            if float(precv[0]) + float(precv[1]) > 1.0 :
-                self.send_error(404, "too expensive")
+            if float(precv[0]) + float(precv[1]) > fuse:
+                self.send_error(404, "the fuse has tripped")
                 return
 
             quest_result = None
@@ -77,7 +78,7 @@ class GetHandler(BaseHTTPRequestHandler):
                 self.send_error(404, "Cancel")
                 return
 
-            print('DO_raw_xt', raw_xt)
+            #print('DO_raw_xt', raw_xt)
 
             self.BTCTransaction = '%s'%raw_xt
 
@@ -86,9 +87,9 @@ class GetHandler(BaseHTTPRequestHandler):
             bsocet = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             bsocet.connect((BShop[0],BShopPort))
             httpsend = "PUT$" + self.BTCTransaction + "\r\n\r\n"
-            print("Transaction send",httpsend)
+            #print("Transaction send",httpsend)
             bsocet.send(httpsend)
-            print ("Shop Answer=",bsocet.recv(4))
+            #print ("Shop Answer=",bsocet.recv(4))
             bsocet.close()
             
             csum = 0
@@ -96,7 +97,7 @@ class GetHandler(BaseHTTPRequestHandler):
                 csum += csum + ord(char)
             csum %= 0x10**8
             httpsend = "Location: " + myreferer[0] + "//" +  myreferer[2] + "/%08X$"%csum +self.path 
-            print("to browser",csum,httpsend,">")
+            #print("to browser",csum,httpsend,">")
             self.wfile.write(httpsend)
             self.wfile.write("\nContent-Length: 0\nConnection: close\n\n")
         return
@@ -179,7 +180,7 @@ class Plugin(BasePlugin):
 
             receiv_address = self.window.wallet.dummy_address()
             coins = [{'prevout_hash': u'', 'value': 000000000, 'height': 0, 'address': receiv_address , 'coinbase': False, 'prevout_n': 0}]
-            print('receiv_address', receiv_address)                
+            #print('receiv_address', receiv_address)                
         try:
             if ufee == 0:
                 quest_tx = self.window.wallet.make_unsigned_transaction(coins, outputs, self.window.config, 0)
@@ -187,17 +188,19 @@ class Plugin(BasePlugin):
             else:
                 while 1:
                     quest_tx = self.window.wallet.make_unsigned_transaction(coins, outputs, self.window.config, fee)
-                    print('quest_tx=', quest_tx)
+                    #print('quest_tx=', quest_tx)
                     raw_xt = quest_tx.__str__()
                     tlen = len( raw_xt ) / 2
                     if   abs(fee - ufee * tlen / 1000 ) < 100 :
                         break
                     fee = ufee * tlen / 1000
         except NotEnoughFunds:
+            self.window.activateWindow()
             self.window.show_message("Insufficient funds")
             quest_result = 0
             return
         except BaseException as e:
+            self.window.activateWindow()
             self.window.show_message(str(e))
             quest_result = 0
             return
@@ -218,6 +221,6 @@ class Plugin(BasePlugin):
         
         quest_result = self.new_contact_dialog()
 
-        print('dialog=', quest_result)
+        #print('dialog=', quest_result)
         
         
