@@ -46,13 +46,9 @@ class CmFSHandler(FSHandler):
             for x in XTr.inputs():
                 InputAdrs[x['address']]=None
 
-            netw = Network(None)
-            netw.start()
 
             for x in InputAdrs:
-                InputAdrs[x]=netw.synchronous_get(('blockchain.address.listunspent', [x]))
-
-            netw.stop()
+                InputAdrs[x]=self.netw.synchronous_get(('blockchain.address.listunspent', [x]))
 
             fee = 0
             amount = 0
@@ -92,8 +88,11 @@ class CmFSHandler(FSHandler):
         GFileID = self.FileID
 
         #print('TransactionTst=', GRowTransaction )
-
+        self.netw = Network(None)
+        self.netw.start()
         Txres = self.Tx_test()
+        self.netw.stop()
+
         return Txres
 
 class FileServer(Thread):
