@@ -73,14 +73,9 @@ class CmFSHandler(FSHandler):
         except:
             return 0
                          
-        #fee = amount - XTr.output_value()
-        
-        #self.window.show_transaction(XTr, u'')
-        print("amount, fee =",amount, fee, Flv , FLfee , TTime, len(GRowTransaction) )
-        print("dFlv =",Flv * 10.**8 , FLfee * 10.**8  , fee * 1000. / (len(GRowTransaction)/2)  )
         dFlv = abs (Flv * 10.**8 - amount )
         dFLfee = abs (FLfee * 10.**8  - fee * 1000. / (len(GRowTransaction)/2)  )
-        print("dFlv =",dFlv,dFLfee ,Flv * 10.**8 , FLfee * 10.**8  , fee * 1000. / (len(GRowTransaction)/2)  )
+
         if( dFLfee + dFlv < 1000 ):
             print('Tx_res = 1')
             return 1       
@@ -100,31 +95,6 @@ class CmFSHandler(FSHandler):
 
         Txres = self.Tx_test()
         return Txres
-    '''
-    def list_directory(self, path):
-        global Bnetwork
-        print('list_directory=', path)
-        f = StringIO()
-        f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
-        f.write("<html>\n<title>File Shop  displaypath</title>\n" )
-        f.write("<body>\n<h2>The running <a href=\"https://github.com/mak4444/LTCFileShopPlugin\">Electrum-ltc plugin</a> is needed for downloading</h2>\n")
-        f.write('%s\n'%(path))
-        netw = Network(None)
-        netw.start()
-        yyy = netw.synchronous_get(('blockchain.address.listunspent', ['LLuggsZhhkqyuyXKCjCZjmP6fFX2EgcDaa']))
-        f.write('address.list=%s'%(yyy))
-
-        print('address.list=', yyy)
-        netw.stop()
-        length = f.tell()
-        f.seek(0)
-        self.send_response(200)
-        encoding = sys.getfilesystemencoding()
-        self.send_header("Content-type", "text/html; charset=%s" % encoding)
-        self.send_header("Content-Length", str(length))
-        self.end_headers()
-        return f
-    '''
 
 class FileServer(Thread):
     def __init__(self):
