@@ -43,7 +43,7 @@ http://212.237.6.204:8008 - first shop
  The FileShop plug-in is a kind of WWW server.
  In this case, the seller must be running the Electrum-ltc with FileShop plugin.
  and the buyer must be running the Electrum-ltc with FileBuyer plugin.
- The FileBuyer plugin will ask permission from thыe user to forward the transaction.
+ The FileBuyer plugin will ask permission from the user to forward the transaction.
  The purchase of a file is similar to downloading files from cloud servers
  Technically, the following actions will occur:
  The primary file request is forwarded to localhost:8120 to FileBuyer.
