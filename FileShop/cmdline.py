@@ -27,12 +27,66 @@ from FileShop import *
 Bnetwork = None
 
 class CmFSHandler(FSHandler):
-    def __init__(self, request, client_address, server ):
-        Bnetwork = Network(None)
-        #Bnetwork.start()
-        #Bnetwork = network
-        print('Bnetwork=',Bnetwork)
-        FSHandler.__init__(self, request, client_address, server)
+    def Tx_test(self):
+        global GRowTransaction
+        global GFileID
+        global Tx_res
+        try:
+            XTr = Transaction(GRowTransaction)
+        except:
+            Tx_res = 0
+            return
+        print('XTr = ',XTr)
+
+        Flv , FLfee , TTime = FileShop.FilePP[GFileID]
+        if( Flv + FLfee == 0. ):
+            Tx_res = 1
+            return       
+        try:        
+            #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
+            InputAdrs = {}
+            for x in XTr.inputs():
+                InputAdrs[x['address']]=None
+
+            netw = Network(None)
+            netw.start()
+
+            for x in InputAdrs:
+                InputAdrs[x]=netw.synchronous_get(('blockchain.address.listunspent', [x]))
+
+            netw.stop()
+
+            fee = 0
+            amount = 0
+
+            for x in XTr.inputs():
+                print(InputAdrs[x['address']] )
+                for y in InputAdrs[x['address']]:
+                    if y['tx_hash'] == x['prevout_hash']:
+                        fee += int( y['value'])
+
+            amount = 0
+            for addr, value in XTr.get_outputs():
+                print('get_outputs=',addr, value , FileShop.ReceivAddress )
+                fee -= value
+                if addr == FileShop.ReceivAddress:
+                    amount += value
+
+        except:
+            Tx_res = 0
+            return
+                         
+        #fee = amount - XTr.output_value()
+        
+        #self.window.show_transaction(XTr, u'')
+        print("amount, fee =",amount, fee, Flv , FLfee , TTime, len(GRowTransaction) )
+        dFlv = abs (Flv * 10.**8 - amount )
+        dFLfee = abs (FLfee * 10.**8  - fee * 1000. / (len(GRowTransaction)/2)  )
+        if( dFLfee + dFlv < 1000 ):
+            Tx_res = 1
+            return       
+        
+        Tx_res = 0
         
     def TransactionTst(self):
         global quest_obj
@@ -47,14 +101,14 @@ class CmFSHandler(FSHandler):
         #quest_obj.emit(SIGNAL('FShopServerSig'))
         #while Tx_res == None:
         #    time.sleep(0.1)
-        xxx = Bnetwork.synchronous_get('blockchain.address.listunspent', ['LfKG665Lcs2mLatwDP9zeZKDuVy4whJQUd'])
-        print('address.list=', xxx )
+        #xxx = Bnetwork.synchronous_get('blockchain.address.listunspent', ['LLuggsZhhkqyuyXKCjCZjmP6fFX2EgcDaa'])
+        #print('address.list=', xxx )
 
-        Tx_res = 1
+        Tx_res = self.Tx_test()
         Txres = Tx_res
         FileShop.TLock.release()
         return Txres
-
+    '''
     def list_directory(self, path):
         global Bnetwork
         print('list_directory=', path)
@@ -63,14 +117,13 @@ class CmFSHandler(FSHandler):
         f.write("<html>\n<title>File Shop  displaypath</title>\n" )
         f.write("<body>\n<h2>The running <a href=\"https://github.com/mak4444/LTCFileShopPlugin\">Electrum-ltc plugin</a> is needed for downloading</h2>\n")
         f.write('%s\n'%(path))
-        Bnetwork = Network(None)
-        Bnetwork.start()
-        yyy = Bnetwork.synchronous_get(('blockchain.address.listunspent', ['Le9vkf1ZiC8A6wF9HHaEJ28cLD1EiwzPef']))
-        Bnetwork.stop()
+        netw = Network(None)
+        netw.start()
+        yyy = netw.synchronous_get(('blockchain.address.listunspent', ['LLuggsZhhkqyuyXKCjCZjmP6fFX2EgcDaa']))
+        f.write('address.list=%s'%(yyy))
 
         print('address.list=', yyy)
-        Bnetwork.stop()
-        #f.write('address.list=%s'%( Bnetwork.synchronous_get('blockchain.address.listunspent', ['LfKG665Lcs2mLatwDP9zeZKDuVy4whJQUd'])))
+        netw.stop()
         length = f.tell()
         f.seek(0)
         self.send_response(200)
@@ -79,7 +132,7 @@ class CmFSHandler(FSHandler):
         self.send_header("Content-Length", str(length))
         self.end_headers()
         return f
-
+    '''
 
 class FileServer(Thread):
     def __init__(self):

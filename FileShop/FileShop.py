@@ -24,9 +24,9 @@ except ImportError:
     from StringIO import StringIO
 
 NFlPrice = 0.04
-NFlTrFee = 0.002
+NFlTrFee = 0.001
 FlPrice = 0.01
-FlTrFee = 0.001
+FlTrFee = 0.0008
 OFlPrice = 0.0
 OFlTrFee = 0.0
 MemPoolLimit = 0.1 

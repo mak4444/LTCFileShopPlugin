@@ -77,6 +77,9 @@ class Plugin(BasePlugin):
     global quest_obj
     Server = None
     def __init__(self, parent, config, name):
+        self.DefDddr = 'LLuggsZhhkqyuyXKCjCZjmP6fFX2EgcDaa'
+        if FileShop.ReceivAddress == '':
+            FileShop.ReceivAddress = self.DefDddr
 
         BasePlugin.__init__(self, parent, config, name)
 
@@ -108,14 +111,14 @@ class Plugin(BasePlugin):
     def load_wallet(self, wallet, window):
         #global ReceivAddress 
         self.window = window
-        if FileShop.ReceivAddress == '':
+        if FileShop.ReceivAddress == self.DefDddr:
             FileShop.ReceivAddress = wallet.dummy_address()
 
     @hook
     def init_qt(self, gui):
         for window in gui.windows:
             self.window = window
-            if FileShop.ReceivAddress == '':
+            if FileShop.ReceivAddress == self.DefDddr:
                 FileShop.ReceivAddress = self.window.wallet.dummy_address()
             break
 
@@ -243,7 +246,7 @@ class Plugin(BasePlugin):
             Tx_res = 1
             return       
         try:        
-            is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
+            #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
             InputAdrs = {}
             for x in XTr.inputs():
                 InputAdrs[x['address']]=None

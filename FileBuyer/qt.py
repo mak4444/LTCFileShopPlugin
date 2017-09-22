@@ -15,6 +15,7 @@ import threading
 import sys
 import datetime
 import time
+import inspect
 
 quest_obj = QObject()
 quest_result = None
@@ -157,13 +158,20 @@ class Plugin(BasePlugin):
             break        
 
     def new_contact_dialog(self):
-        d = WindowModalDialog(self.window, "New Contact")
+        d = WindowModalDialog(self.window, "transaction send")
         vbox = QVBoxLayout(d)
         vbox.addWidget(QLabel(self.tquestion))
         vbox.addLayout(Buttons(CancelButton(d), OkButton(d)))
+    
+        d.setWindowState(Qt.WindowActive)
+        d.setWindowFlags(d.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
 
+        # don't work
         d.show()
+        d.raise_()
         d.activateWindow()
+        d.setFocus()
+
         return d.exec_()
 
     def new_question(self):
@@ -216,7 +224,13 @@ class Plugin(BasePlugin):
             return
 
         time_str = str(datetime.datetime.fromtimestamp(float( self.precv[2])))
-        self.tquestion = "Amount = %fLTC\nFee = %sLTC\nTime = %s"%( amount / 10.**8   , fee / 10.**8 , time_str )
+
+        self.tquestion = '''do you wish to send the transaction?
+
+Amount = %fLTC
+Fee = %sLTC
+Time = %s
+'''%( amount / 10.**8   , fee / 10.**8 , time_str )
         
         
         quest_result = self.new_contact_dialog()
