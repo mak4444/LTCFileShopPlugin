@@ -27,21 +27,19 @@ from FileShop import *
 Bnetwork = None
 
 class CmFSHandler(FSHandler):
+
     def Tx_test(self):
         global GRowTransaction
         global GFileID
-        global Tx_res
         try:
             XTr = Transaction(GRowTransaction)
         except:
-            Tx_res = 0
-            return
-        print('XTr = ',XTr)
+            return 0
+        #print('XTr = ',XTr)
 
         Flv , FLfee , TTime = FileShop.FilePP[GFileID]
         if( Flv + FLfee == 0. ):
-            Tx_res = 1
-            return       
+            return 1      
         try:        
             #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
             InputAdrs = {}
@@ -73,40 +71,34 @@ class CmFSHandler(FSHandler):
                     amount += value
 
         except:
-            Tx_res = 0
-            return
+            return 0
                          
         #fee = amount - XTr.output_value()
         
         #self.window.show_transaction(XTr, u'')
         print("amount, fee =",amount, fee, Flv , FLfee , TTime, len(GRowTransaction) )
+        print("dFlv =",Flv * 10.**8 , FLfee * 10.**8  , fee * 1000. / (len(GRowTransaction)/2)  )
         dFlv = abs (Flv * 10.**8 - amount )
         dFLfee = abs (FLfee * 10.**8  - fee * 1000. / (len(GRowTransaction)/2)  )
+        print("dFlv =",dFlv,dFLfee ,Flv * 10.**8 , FLfee * 10.**8  , fee * 1000. / (len(GRowTransaction)/2)  )
         if( dFLfee + dFlv < 1000 ):
-            Tx_res = 1
-            return       
+            print('Tx_res = 1')
+            return 1       
         
-        Tx_res = 0
+        return 0
         
     def TransactionTst(self):
         global quest_obj
         global GRowTransaction
         global GFileID
-        global Tx_res
-        global Bnetwork
-        FileShop.TLock.acquire()
+
+        #FileShop.TLock.acquire()
         GRowTransaction = self.RowTransaction
         GFileID = self.FileID
-        Tx_res = None
-        #quest_obj.emit(SIGNAL('FShopServerSig'))
-        #while Tx_res == None:
-        #    time.sleep(0.1)
-        #xxx = Bnetwork.synchronous_get('blockchain.address.listunspent', ['LLuggsZhhkqyuyXKCjCZjmP6fFX2EgcDaa'])
-        #print('address.list=', xxx )
 
-        Tx_res = self.Tx_test()
-        Txres = Tx_res
-        FileShop.TLock.release()
+        #print('TransactionTst=', GRowTransaction )
+
+        Txres = self.Tx_test()
         return Txres
     '''
     def list_directory(self, path):
