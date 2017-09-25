@@ -294,16 +294,15 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             
             try:
                 #print('IDTransactions=',self.path[1:9])
-                IDTran = int(self.path[1:9],base=16)
-
-                #print('Transactions=',Transactions[IDTran])
+                self.IDTran = int(self.path[1:9],base=16)
+                self.RowTransaction = Transactions[self.IDTran]
+                #print('Transactions=',self.RowTransaction)
                 
-            except KeyError:
+            #except KeyError:
+            except :
                 self.send_error(404, "Transaction not found")
                 return None
-            
-            self.RowTransaction = Transactions[IDTran]
-                        
+                                    
             self.FileID = 0
             for char in self.path[10:]:
                 self.FileID += ord(char)                
@@ -324,7 +323,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_error(404, "File not found")
             return None
         
-        if IDTran != None:   
+        if self.IDTran != None:   
             if not self.TransactionTst():
                 self.send_error(404, "Transaction test error")
                 return None       

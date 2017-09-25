@@ -39,17 +39,23 @@ from FileShop import *
 quest_obj = QObject()
 GRowTransaction = None
 GFileID = None
+GIDTran = None
 Tx_res = None
+Tx_IOSave = {}
+ST4del = []
+
 
 class GFSHandler(FSHandler):
     def TransactionTst(self):
         global quest_obj
         global GRowTransaction
         global GFileID
+        global GIDTran
         global Tx_res
         
         FileShop.TLock.acquire()
         GRowTransaction = self.RowTransaction
+        GIDTran = self.IDTran
         GFileID = self.FileID
         Tx_res = None
         quest_obj.emit(SIGNAL('FShopServerSig'))
@@ -234,6 +240,9 @@ class Plugin(BasePlugin):
         global GRowTransaction
         global GFileID
         global Tx_res
+        global GIDTran
+        global ST4del
+        
         try:
             XTr = Transaction(GRowTransaction)
         except:
@@ -244,36 +253,45 @@ class Plugin(BasePlugin):
         Flv , FLfee , TTime = FileShop.FilePP[GFileID]
         if( Flv + FLfee == 0. ):
             Tx_res = 1
-            return       
-        try:        
-            #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
-            InputAdrs = {}
-            for x in XTr.inputs():
-                InputAdrs[x['address']]=None
-            for x in InputAdrs:
-                InputAdrs[x]=self.window.network.synchronous_get(('blockchain.address.listunspent', [x]))
-
-            fee = 0
-            amount = 0
-
-            for x in XTr.inputs():
-                print(InputAdrs[x['address']] )
-                for y in InputAdrs[x['address']]:
-                    if y['tx_hash'] == x['prevout_hash']:
-                        fee += int( y['value'])
-
-            amount = 0
-            for addr, value in XTr.get_outputs():
-                print('get_outputs=',addr, value , FileShop.ReceivAddress )
-                print('get_outrrrr=', FileShop.ReceivAddress )
-                fee -= value
-                if addr == FileShop.ReceivAddress:
-                    amount += value
-
-        except:
-            Tx_res = 0
             return
-                         
+        try:
+            amount,fee = Tx_IOSave[GIDTran]
+        except:
+               
+            try:        
+                #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
+                InputAdrs = {}
+                for x in XTr.inputs():
+                    InputAdrs[x['address']]=None
+                    for x in InputAdrs:
+                        InputAdrs[x]=self.window.network.synchronous_get(('blockchain.address.listunspent', [x]))
+
+                fee = 0
+                amount = 0
+
+                for x in XTr.inputs():
+                    print(InputAdrs[x['address']] )
+                    for y in InputAdrs[x['address']]:
+                        if y['tx_hash'] == x['prevout_hash']:
+                            fee += int( y['value'])
+
+                for addr, value in XTr.get_outputs():
+                    print('get_outputs=',addr, value , FileShop.ReceivAddress )
+                    fee -= value
+                    if addr == FileShop.ReceivAddress:
+                        amount += value
+
+                if len(ST4del) > 9:
+                    del Tx_IOSave[ST4del[0]]
+                    del ST4del[0]
+
+                Tx_IOSave[GIDTran] = amount,fee   
+                ST4del.append(GIDTran)        
+
+            except:
+                Tx_res = 0
+                return
+             
         #fee = amount - XTr.output_value()
         
         self.window.show_transaction(XTr, u'')
@@ -281,6 +299,13 @@ class Plugin(BasePlugin):
         dFlv = abs (Flv * 10.**8 - amount )
         dFLfee = abs (FLfee * 10.**8  - fee * 1000. / (len(GRowTransaction)/2)  )
         if( dFLfee + dFlv < 1000 ):
+            status, msg = None,None
+            try:
+                status, msg =  self.window.network.broadcast(XTr)
+            except:
+                pass
+            
+            print('broadcast=',status, msg)
             Tx_res = 1
             return       
         
