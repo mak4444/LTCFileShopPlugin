@@ -87,8 +87,8 @@ class CmFSHandler(FSHandler):
             except:
                 return 0
                          
-        dFlv = abs (Flv * 10.**8 - amount )
-        dFLfee = abs (FLfee * 10.**8  - fee * 1000. / (len(GRowTransaction)/2)  )
+        dFlv = abs (Flv * 1e8 - amount )
+        dFLfee = abs (FLfee * 1e8  - fee * 1000. / (len(GRowTransaction)/2)  )
 
         if( dFLfee + dFlv < 1000 ):
             status, msg = None,None

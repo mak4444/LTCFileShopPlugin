@@ -29,7 +29,7 @@ FlPrice = 0.01
 FlTrFee = 0.0008
 OFlPrice = 0.0
 OFlTrFee = 0.0
-MemPoolLimit = 0.1 
+MemPoolLimit = 0.0000001 
 Transactions = {}
 Tr4del = []
 FilePP = {}
@@ -114,8 +114,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
         f.write("<html>\n<title>File Shop %s</title>\n" % displaypath)
         f.write("<body>\n<h2>The running <a href=\"https://github.com/mak4444/LTCFileShopPlugin\">Electrum-ltc plugin</a> is needed for downloading</h2>\n")
-        f.write("<hr>\n<ul>\n")
-        f.write("<table border=\"1\"> <tr> <th>Name</th><th>Size</th><th>Modify time</th> <th>Price LTC</th>  <th>Tr Fee LTC/kB </th> </tr>")
+        f.write("<hr>\n<ul>\n<table border=\"1\"> <tr> <th>Name</th><th>Size</th><th>Modify time</th> <th>Price LTC</th>  <th>Tr Fee LTC/kB </th> </tr>")
         for name in list:
             fullname = os.path.join(path, name)
             displayname = linkname = name
@@ -161,7 +160,6 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
     def do_PUT(self):
 	global Tr4del
-        self.wfile.write("ok\r\n")
         csum = 0
         for char in self.RowTransaction:
             csum += csum + ord(char)
@@ -180,6 +178,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             del Tr4del[0]
 
         Transactions[csum]=self.RowTransaction # self.TransactionTst()
+        self.wfile.write("ok\r\n")
         Tr4del.append(csum)        
 
     def handle_one_request(self):
@@ -268,35 +267,34 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self.close_connection = 1
                 return f
              
-            if self.path[1+8] == "$" :
-                if self.path[1:9]=='ltc00000': # What transaction do you need?
-                    self.path= self.path.split('$')[1]
-                    path = self.translate_path(self.path)           
+            if self.path[1:9]=='ltc00000': # What transaction do you need?
+                self.path= self.path.split('$')[1]
+                path = self.translate_path(self.path)           
 
-                    FDTime = os.path.getmtime(path)
-                    DeltaT = time.mktime(time.localtime()) - FDTime
-                    if DeltaT < 60*60:
-                        HFlPrice = NFlPrice
-                        HFlTrFee = NFlTrFee
-                    elif DeltaT < 60*60*24:
-                        HFlPrice = FlPrice
-                        HFlTrFee = FlTrFee
-                    else:
-                        HFlPrice = OFlPrice
-                        HFlTrFee = OFlTrFee
-                    FileID = 0
-                    for char in self.path:
-                        FileID += ord(char)
-                    #print('FileID',FileID,self.path)
-                    FilePP[FileID] = (HFlPrice,HFlTrFee,time.mktime(time.gmtime()))
-                    self.wfile.write("%s;%s;%s;%s\r\n"%(HFlPrice,HFlTrFee,time.mktime(time.gmtime()),ReceivAddress))
-                    return f
+                FDTime = os.path.getmtime(path)
+                DeltaT = time.mktime(time.localtime()) - FDTime
+                if DeltaT < 60*60:
+                    HFlPrice = NFlPrice
+                    HFlTrFee = NFlTrFee
+                elif DeltaT < 60*60*24:
+                    HFlPrice = FlPrice
+                    HFlTrFee = FlTrFee
+                else:
+                    HFlPrice = OFlPrice
+                    HFlTrFee = OFlTrFee
+                FileID = 0
+                for char in self.path:
+                    FileID += ord(char)
+                #print('FileID',FileID,self.path)
+                FilePP[FileID] = (HFlPrice,HFlTrFee,time.mktime(time.gmtime()))
+                self.wfile.write("%s;%s;%s;%s\r\n"%(HFlPrice,HFlTrFee,time.mktime(time.gmtime()),ReceivAddress))
+                return f
             
             try:
-                #print('IDTransactions=',self.path[1:9])
+                print('IDTransactions=',self.path[1:9])
                 self.IDTran = int(self.path[1:9],base=16)
                 self.RowTransaction = Transactions[self.IDTran]
-                #print('Transactions=',self.RowTransaction)
+                print('Transactions=',self.RowTransaction)
                 
             #except KeyError:
             except :

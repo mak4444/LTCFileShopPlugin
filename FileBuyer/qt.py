@@ -3,9 +3,11 @@ from PyQt4.QtCore import *
 import PyQt4.QtCore as QtCore
 
 from electrum_ltc.plugins import BasePlugin, hook
-from electrum_ltc_gui.qt.util import WindowModalDialog , Buttons , CancelButton, OkButton
+from electrum_ltc_gui.qt.util import WindowModalDialog , Buttons , CancelButton, OkButton , EnterButton
 from electrum_ltc.util import *
 from electrum_ltc.transaction import Transaction
+
+from functools import partial
 
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
@@ -22,6 +24,7 @@ quest_result = None
 quest_recv = None
 raw_xt = None
 fuse = 1.
+BuyPw =  None
 
 class GetHandler(BaseHTTPRequestHandler):
 
@@ -90,7 +93,8 @@ class GetHandler(BaseHTTPRequestHandler):
             httpsend = "PUT$" + self.BTCTransaction + "\r\n\r\n"
             #print("Transaction send",httpsend)
             bsocet.send(httpsend)
-            #print ("Shop Answer=",bsocet.recv(4))
+            rcv = bsocet.recv(4)
+            print ("Shop Answer=",rcv)
             bsocet.close()
             
             csum = 0
@@ -144,6 +148,16 @@ class Plugin(BasePlugin):
             self.Server = BuyerServer()
             self.Server.start()
 
+    def requires_settings(self):
+        return True
+
+    def settings_widget(self, window):
+        return EnterButton( ('Settings'), partial(self.settings_dialog, window))
+
+    def settings_dialog(self, window):
+        global BuyPw
+        BuyPw = self.window.password_dialog('')             
+
     def close(self):
         self.Server.SStop()
 
@@ -176,6 +190,7 @@ class Plugin(BasePlugin):
 
     def new_question(self):
         global quest_result
+        global BuyPw
         global raw_xt
 
         self.precv = quest_recv.split(';')
@@ -192,6 +207,7 @@ class Plugin(BasePlugin):
         try:
             if ufee == 0:
                 quest_tx = self.window.wallet.make_unsigned_transaction(coins, outputs, self.window.config, 0)
+                self.window.wallet.sign_transaction(quest_tx, BuyPw)
                 raw_xt = quest_tx.__str__()
             else:
                 while 1:
@@ -230,7 +246,7 @@ class Plugin(BasePlugin):
 Amount = %fLTC
 Fee = %sLTC
 Time = %s
-'''%( amount / 10.**8   , fee / 10.**8 , time_str )
+'''%( amount / 1e8   , fee / 1e8 , time_str )
         
         
         quest_result = self.new_contact_dialog()

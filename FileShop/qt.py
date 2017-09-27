@@ -260,6 +260,12 @@ class Plugin(BasePlugin):
                
             try:        
                 #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
+                
+                tx_hash, status, label, can_broadcast, can_rbf, amount, fee, height, conf, timestamp, exp_n = self.window.wallet.get_tx_info(XTr)
+                if status != u'Signed':
+                    Tx_res = 0
+                    return
+
                 InputAdrs = {}
                 for x in XTr.inputs():
                     InputAdrs[x['address']]=None
@@ -296,16 +302,19 @@ class Plugin(BasePlugin):
         
         self.window.show_transaction(XTr, u'')
         print("amount, fee =",amount, fee, Flv , FLfee , TTime, len(GRowTransaction) )
-        dFlv = abs (Flv * 10.**8 - amount )
-        dFLfee = abs (FLfee * 10.**8  - fee * 1000. / (len(GRowTransaction)/2)  )
-        if( dFLfee + dFlv < 1000 ):
-            status, msg = None,None
-            try:
-                status, msg =  self.window.network.broadcast(XTr)
-            except:
-                pass
-            
+        dFlv = abs (Flv * 1e8 - amount )
+        dFLfee = abs (FLfee * 1e8  - fee * 1000. / (len(GRowTransaction)/2)  )
+        if dFLfee + dFlv < 1000 :
+            msg = 'MemPoolLimit'
+            if amount >  MemPoolLimit * 1e8 :
+                status, msg = None,None
+                try:
+                    status, msg =  self.window.network.broadcast(GRowTransaction)
+                except:
+                    pass            
+             
             print('broadcast=',status, msg)
+                
             Tx_res = 1
             return       
         
