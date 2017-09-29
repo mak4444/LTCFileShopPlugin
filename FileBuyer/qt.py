@@ -4,6 +4,7 @@ import PyQt4.QtCore as QtCore
 
 from electrum_ltc.plugins import BasePlugin, hook
 from electrum_ltc_gui.qt.util import WindowModalDialog , Buttons , CancelButton, OkButton , EnterButton
+from electrum_ltc_gui.qt.password_dialog import PasswordDialog
 from electrum_ltc.util import *
 from electrum_ltc.transaction import Transaction
 
@@ -26,6 +27,15 @@ raw_xt = None
 fuse = 1.
 BuyPw =  None
 
+def dset(d):
+    d.setWindowState(Qt.WindowActive)
+    d.setWindowFlags(d.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+    # don't work
+    d.show()
+    d.raise_()
+    d.activateWindow()
+    d.setFocus()
+
 class GetHandler(BaseHTTPRequestHandler):
 
     global quest_obj
@@ -42,9 +52,7 @@ class GetHandler(BaseHTTPRequestHandler):
         #print("myreferer=",myreferer)
 
         if  len(myreferer) > 1: 
-
             self.wfile.write("HTTP/1.1 303 See Other\n")
-
             BShop = myreferer[2].split(':')
             BShopPort = 80
             if len(BShop) == 2:
@@ -53,7 +61,6 @@ class GetHandler(BaseHTTPRequestHandler):
             if BShopPort == 8120:
                 self.send_error(404, "File not found")
                 return
-
             # Give me the transaction parameters
             bsocet = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             bsocet.connect((BShop[0],BShopPort))
@@ -70,24 +77,16 @@ class GetHandler(BaseHTTPRequestHandler):
             if float(precv[0]) + float(precv[1]) > fuse:
                 self.send_error(404, "the fuse has tripped")
                 return
-
             quest_result = None
-
             quest_obj.emit(SIGNAL('BuyerServerSig'))
-
             while quest_result == None:
                 time.sleep(0.1)
-
             if not quest_result:
                 self.send_error(404, "Cancel")
                 return
-
             #print('DO_raw_xt', raw_xt)
-
             self.BTCTransaction = '%s'%raw_xt
-
             # Send  transaction
-
             bsocet = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             bsocet.connect((BShop[0],BShopPort))
             httpsend = "PUT$" + self.BTCTransaction + "\r\n\r\n"
@@ -156,7 +155,8 @@ class Plugin(BasePlugin):
 
     def settings_dialog(self, window):
         global BuyPw
-        BuyPw = self.window.password_dialog('')             
+        BuyPw = self.window.password_dialog('')
+        print('BuyPw=',BuyPw)
 
     def close(self):
         self.Server.SStop()
@@ -176,17 +176,8 @@ class Plugin(BasePlugin):
         vbox = QVBoxLayout(d)
         vbox.addWidget(QLabel(self.tquestion))
         vbox.addLayout(Buttons(CancelButton(d), OkButton(d)))
-    
-        d.setWindowState(Qt.WindowActive)
-        d.setWindowFlags(d.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-
-        # don't work
-        d.show()
-        d.raise_()
-        d.activateWindow()
-        d.setFocus()
-
-        return d.exec_()
+        dset(d)
+        return d.exec_()       
 
     def new_question(self):
         global quest_result
@@ -194,10 +185,15 @@ class Plugin(BasePlugin):
         global raw_xt
 
         self.precv = quest_recv.split(';')
-        ufee = int( float(self.precv[1]) * 10**8 )
+        ufee = int( float(self.precv[1]) * 1e8 )
         coins = self.window.get_coins()
-        outputs = [(0,self.precv[3],int( float(self.precv[0]) * 10**8 ))]
+        outputs = [(0,self.precv[3],int( float(self.precv[0]) * 1e8 ))]
         fee = ufee 
+
+        if  (BuyPw == None) & ( ufee + outputs[0][2] !=0 ) :
+            d = PasswordDialog(self.window)
+            dset(d)
+            BuyPw = d.run()
         
         if coins == []:
 
@@ -207,12 +203,13 @@ class Plugin(BasePlugin):
         try:
             if ufee == 0:
                 quest_tx = self.window.wallet.make_unsigned_transaction(coins, outputs, self.window.config, 0)
-                self.window.wallet.sign_transaction(quest_tx, BuyPw)
+                if outputs[0][2]:
+                    self.window.wallet.sign_transaction(quest_tx, BuyPw)
                 raw_xt = quest_tx.__str__()
             else:
                 while 1:
                     quest_tx = self.window.wallet.make_unsigned_transaction(coins, outputs, self.window.config, fee)
-                    #print('quest_tx=', quest_tx)
+                    self.window.wallet.sign_transaction(quest_tx, BuyPw)
                     raw_xt = quest_tx.__str__()
                     tlen = len( raw_xt ) / 2
                     if   abs(fee - ufee * tlen / 1000 ) < 100 :
@@ -227,6 +224,7 @@ class Plugin(BasePlugin):
             self.window.activateWindow()
             self.window.show_message(str(e))
             quest_result = 0
+            BuyPw = None
             return
         
         #self.window.show_transaction(quest_tx, u'')
@@ -235,7 +233,7 @@ class Plugin(BasePlugin):
         if fee==None:
             fee = 0
 
-        if amount + fee == 0:
+        if amount + fee == -10:
             quest_result = True
             return
 
@@ -245,12 +243,11 @@ class Plugin(BasePlugin):
 
 Amount = %fLTC
 Fee = %sLTC
-Time = %s
-'''%( amount / 1e8   , fee / 1e8 , time_str )
-        
-        
+'''%( amount / 1e8  , fee / 1e8)
+                
         quest_result = self.new_contact_dialog()
+	#quest_result = self.window.password_dialog(self.tquestion, parent = self.window.top_level_window())
 
-        #print('dialog=', quest_result)
+        print('dialog=', quest_result)
         
         

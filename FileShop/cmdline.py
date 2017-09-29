@@ -52,15 +52,16 @@ class CmFSHandler(FSHandler):
       
             try:        
                 #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
+                tx_hash, status, label, can_broadcast, can_rbf, amount, fee, height, conf, timestamp, exp_n = self.wallet.get_tx_info(XTr)
+                if status != u'Signed':
+                    Tx_res = 0
+                    return
+                
                 InputAdrs = {}
                 for x in XTr.inputs():
                     InputAdrs[x['address']]=None
-
-                self.netw = Network(None)
-                self.netw.start()
-
-                for x in InputAdrs:
-                    InputAdrs[x]=self.netw.synchronous_get(('blockchain.address.listunspent', [x]))
+                    for x in InputAdrs:
+                        InputAdrs[x]=self.network.synchronous_get(('blockchain.address.listunspent', [x]))
 
                 fee = 0
                 amount = 0
@@ -89,10 +90,16 @@ class CmFSHandler(FSHandler):
                          
         dFlv = abs (Flv * 1e8 - amount )
         dFLfee = abs (FLfee * 1e8  - fee * 1000. / (len(GRowTransaction)/2)  )
-
-        if( dFLfee + dFlv < 1000 ):
-            status, msg = None,None
-            #status, msg =  self.network.broadcast(XTr)
+        if dFLfee + dFlv < 1000 :
+            msg = 'MemPoolLimit'
+            if amount >  MemPoolLimit * 1e8 :
+                status, msg = None,None
+                try:
+                    #status, msg =  self.window.network.broadcast(GRowTransaction)
+                    print('broadcast_try=',status, msg)
+                except:
+                    pass            
+             
             print('broadcast=',status, msg)
 
             return 1       

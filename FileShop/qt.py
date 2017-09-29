@@ -309,7 +309,8 @@ class Plugin(BasePlugin):
             if amount >  MemPoolLimit * 1e8 :
                 status, msg = None,None
                 try:
-                    status, msg =  self.window.network.broadcast(GRowTransaction)
+                    #status, msg =  self.window.network.broadcast(GRowTransaction)
+                    print('broadcast_try=',status, msg)
                 except:
                     pass            
              
