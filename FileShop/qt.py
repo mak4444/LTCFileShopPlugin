@@ -276,13 +276,13 @@ class Plugin(BasePlugin):
                 amount = 0
 
                 for x in XTr.inputs():
-                    print(InputAdrs[x['address']] )
+                    #print(InputAdrs[x['address']] )
                     for y in InputAdrs[x['address']]:
                         if y['tx_hash'] == x['prevout_hash']:
                             fee += int( y['value'])
 
                 for addr, value in XTr.get_outputs():
-                    print('get_outputs=',addr, value , FileShop.ReceivAddress )
+                    #print('get_outputs=',addr, value , FileShop.ReceivAddress )
                     fee -= value
                     if addr == FileShop.ReceivAddress:
                         amount += value

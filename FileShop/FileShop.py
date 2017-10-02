@@ -165,7 +165,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             csum += csum + ord(char)
         csum %= 0x10**8
         self.FileID = csum 
-        print("mmoTransaction=",self.RowTransaction,csum)
+        #print("mmoTransaction=",self.RowTransaction,csum)
 
         # so that the buffer does not grow larger
         try:
@@ -291,10 +291,10 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 return f
             
             try:
-                print('IDTransactions=',self.path[1:9])
+                #print('IDTransactions=',self.path[1:9])
                 self.IDTran = int(self.path[1:9],base=16)
                 self.RowTransaction = Transactions[self.IDTran]
-                print('Transactions=',self.RowTransaction)
+                #print('Transactions=',self.RowTransaction)
                 
             #except KeyError:
             except :

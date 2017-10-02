@@ -40,7 +40,7 @@ class CmFSHandler(FSHandler):
             XTr = Transaction(GRowTransaction)
         except:
             return 0
-        #print('XTr = ',XTr)
+        print('XTr = ',XTr)
 
         Flv , FLfee , TTime = FileShop.FilePP[GFileID]
         if( Flv + FLfee == 0. ):
@@ -49,19 +49,21 @@ class CmFSHandler(FSHandler):
         try:
             amount,fee = Tx_IOSave[self.IDTran]
         except:
+
+            if not XTr.is_complete():
+                return 0
       
             try:        
                 #is_relevant, is_mine, v, fee = self.window.wallet.get_wallet_delta(XTr)
-                tx_hash, status, label, can_broadcast, can_rbf, amount, fee, height, conf, timestamp, exp_n = self.wallet.get_tx_info(XTr)
-                if status != u'Signed':
-                    Tx_res = 0
-                    return
-                
+
+                self.netw = Network(None)               
+                self.netw.start()
+                 
                 InputAdrs = {}
                 for x in XTr.inputs():
                     InputAdrs[x['address']]=None
                     for x in InputAdrs:
-                        InputAdrs[x]=self.network.synchronous_get(('blockchain.address.listunspent', [x]))
+                        InputAdrs[x]=self.netw.synchronous_get(('blockchain.address.listunspent', [x]))
 
                 fee = 0
                 amount = 0
@@ -95,7 +97,7 @@ class CmFSHandler(FSHandler):
             if amount >  MemPoolLimit * 1e8 :
                 status, msg = None,None
                 try:
-                    #status, msg =  self.window.network.broadcast(GRowTransaction)
+                    status, msg =  self.netw.broadcast(XTr)
                     print('broadcast_try=',status, msg)
                 except:
                     pass            
@@ -115,7 +117,7 @@ class CmFSHandler(FSHandler):
         GRowTransaction = self.RowTransaction
         GFileID = self.FileID
 
-        #print('TransactionTst=', GRowTransaction )
+        print('TransactionTst=', GRowTransaction )
         self.netw = None
 
         Txres = self.Tx_test()
