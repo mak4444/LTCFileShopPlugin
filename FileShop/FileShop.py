@@ -34,6 +34,7 @@ Transactions = {}
 Tr4del = []
 FilePP = {}
 ReceivAddress = ''
+ReadmeLst = ['readme','readme.txt','readme.html','README.md']
 
 #class FileAtclass:
 
@@ -86,6 +87,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         words = path.split('/')
         words = filter(None, words)
         path = FileShopPath # os.getcwd()
+        word = ''
         for word in words:
             if os.path.dirname(word) or word in (os.curdir, os.pardir):
                 # Ignore components that are not a simple file/directory name
@@ -93,7 +95,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             path = os.path.join(path, word)
         if trailing_slash:
             path += '/'
-        return path
+        return path,word
 
     def list_directory(self, path):
         """Helper to produce a directory listing (absent index.html).
@@ -129,15 +131,16 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 linkname = name + "/"
             else:
                 filesize = str(os.path.getsize(fullname))
-                if DeltaT < 60*60:
-                    HFlPrice = NFlPrice
-                    HFlTrFee = NFlTrFee
-                elif DeltaT < 60*60*24:
-                    HFlPrice = FlPrice
-                    HFlTrFee = FlTrFee
-                else:
-                    HFlPrice = OFlPrice
-                    HFlTrFee = OFlTrFee
+                if not name in ReadmeLst:
+                    if DeltaT < 60*60:
+                        HFlPrice = NFlPrice
+                        HFlTrFee = NFlTrFee
+                    elif DeltaT < 60*60*24:
+                        HFlPrice = FlPrice
+                        HFlTrFee = FlTrFee
+                    else:
+                        HFlPrice = OFlPrice
+                        HFlTrFee = OFlTrFee
                     
             if os.path.islink(fullname):
                 displayname = name + "@"
@@ -244,7 +247,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """
         #for name, value in self.headers.items():
         #    print('mmo%s=%s' % (name, value.rstrip()))
-        path = self.translate_path(self.path)
+        path,fname = self.translate_path(self.path)
         f = None
         #print("mmopath=<",path,">")
         if os.path.isdir(path):
@@ -269,19 +272,22 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
              
             if self.path[1:9]=='ltc00000': # What transaction do you need?
                 self.path= self.path.split('$')[1]
-                path = self.translate_path(self.path)           
-
-                FDTime = os.path.getmtime(path)
-                DeltaT = time.mktime(time.localtime()) - FDTime
-                if DeltaT < 60*60:
-                    HFlPrice = NFlPrice
-                    HFlTrFee = NFlTrFee
-                elif DeltaT < 60*60*24:
-                    HFlPrice = FlPrice
-                    HFlTrFee = FlTrFee
+                path,fname = self.translate_path(self.path)           
+                if fname in ReadmeLst:
+                        HFlPrice = 0.
+                        HFlTrFee = 0.
                 else:
-                    HFlPrice = OFlPrice
-                    HFlTrFee = OFlTrFee
+                    FDTime = os.path.getmtime(path)
+                    DeltaT = time.mktime(time.localtime()) - FDTime
+                    if DeltaT < 60*60:
+                        HFlPrice = NFlPrice
+                        HFlTrFee = NFlTrFee
+                    elif DeltaT < 60*60*24:
+                        HFlPrice = FlPrice
+                        HFlTrFee = FlTrFee
+                    else:
+                        HFlPrice = OFlPrice
+                        HFlTrFee = OFlTrFee
                 FileID = 0
                 for char in self.path:
                     FileID += ord(char)
@@ -308,7 +314,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             #print('self.FileID',self.FileID,self.path[10:])
             
             path= self.path.split('$')[1]
-            path = self.translate_path(path)           
+            path,fname = self.translate_path(path)           
 
         try:
             ctype = self.guess_type(path)
