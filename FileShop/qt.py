@@ -302,6 +302,7 @@ class Plugin(BasePlugin):
         
         self.window.show_transaction(XTr, u'')
         print("amount, fee =",amount, fee, Flv , FLfee , TTime, len(GRowTransaction) )
+        
         dFlv = abs (Flv * 1e8 - amount )
         dFLfee = abs (FLfee * 1e8  - fee * 1000. / (len(GRowTransaction)/2)  )
         if dFLfee + dFlv < 1000 :
@@ -309,11 +310,11 @@ class Plugin(BasePlugin):
             if amount >  MemPoolLimit * 1e8 :
                 status, msg = None,None
                 try:
-                    #status, msg =  self.window.network.broadcast(GRowTransaction)
+                    status, msg =  self.netw.broadcast(XTr)
                     print('broadcast_try=',status, msg)
                 except:
                     pass            
-             
+                     
             print('broadcast=',status, msg)
                 
             Tx_res = 1
