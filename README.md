@@ -1,4 +1,32 @@
 # LTCFileShopPlugin
+ Плагины к https://electrum-ltc.org/
+ Этот плагины предназначены для удобной купли/продажи дешевых файлов. 
+ Лайткоин выбран из-за низкой комиссии.
+ Файл отдается мгновенно за транзакцию.
+ Предполагается, что ради такой мелочи нет смысла специально даблспендить.
+ Для выставления файла на продажу, достаточно записать его
+ в специальный каталог (по умолчанию Electrum-ltc-shop).
+ Путь к этому каталогу прописан в установках при плагине.
+ В качестве интерфейса используется стандартный браузер с HTML запросами.
+ Плагин FileShop это своего рода WWW сервер.
+ При этом, у продавца должен быть запущен Electrum-ltc с плагином FileShop,
+ а у покупателя Electrum-ltc с плагином FileBuyer.
+ Плагин FileBuyer спросит разрешение у пользователя отпровлять транзакцию.
+ В остальном, покупка файла аналогична скачиванию файлов с облачных серверов.
+ Технически, произойдут следующие действия:
+ Первичный запрос файла переадресуется на localhost:8120 к FileBuyer.
+ Тот снова обращается к FileShop и отдает требуемую за файл
+ транзакцию. Затем делает обратное перенаправление запроса
+ файла к FileShop, но уже с хешем транзакции за файл.
+ Запуск магазина без GUI: ./electrum-ltc daemon start  >xx.txt 2>rr.txt
+ 
+
+for win:
+https://www.python.org/downloads/release/python-2713/
+https://pypi.python.org/pypi/win_inet_pton
+https://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.9.4
+
+http://212.237.6.204:8008 - first shop
 
  Plugins of https://electrum-ltc.org/
  This plugins is designed for convenient purchase/sale of cheap files.
@@ -21,33 +49,5 @@
  Then does the reverse request redirection
   file to FileShop, but already with a transaction hash for the file.
  The shop launching without GUI: ./electrum-ltc daemon start  >xx.txt 2>rr.txt
-
-for win:
-https://www.python.org/downloads/release/python-2713/
-https://pypi.python.org/pypi/win_inet_pton
-https://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.9.4
-
-http://212.237.6.204:8008 - first shop
- 
- Плагины к https://electrum-ltc.org/
- Этот плагины предназначены для удобной купли/продажи дешевых файлов. 
- Лайткоин выбран из-за низкой комиссии.
- Файл отдается мгновенно за транзакцию.
- Предполагается, что ради такой мелочи нет смысла специально даблспендить.
- Для выставления файла на продажу, достаточно записать его
- в специальный каталог (по умолчанию Electrum-ltc-shop).
- Путь к этому каталогу прописан в установках при плагине.
- В качестве интерфейса используется стандартный браузер с HTML запросами.
- Плагин FileShop это своего рода WWW сервер.
- При этом, у продавца должен быть запущен Electrum-ltc с плагином FileShop,
- а у покупателя Electrum-ltc с плагином FileBuyer.
- Плагин FileBuyer спросит разрешение у пользователя отпровлять транзакцию.
- В остальном, покупка файла аналогична скачиванию файлов с облачных серверов.
- Технически, произойдут следующие действия:
- Первичный запрос файла переадресуется на localhost:8120 к FileBuyer.
- Тот снова обращается к FileShop и отдает требуемую за файл
- транзакцию. Затем делает обратное перенаправление запроса
- файла к FileShop, но уже с хешем транзакции за файл.
- Запуск магазина без GUI: ./electrum-ltc daemon start  >xx.txt 2>rr.txt
  
 
