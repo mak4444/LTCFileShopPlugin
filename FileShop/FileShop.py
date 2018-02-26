@@ -34,7 +34,7 @@ Transactions = {}
 Tr4del = []
 FilePP = {}
 ReceivAddress = ''
-ReadmeLst = ['readme','readme.txt','readme.html','README.md']
+ReadmeLst = ['readme.txt','readme.html','README.md']
 
 #class FileAtclass:
 
@@ -260,8 +260,8 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.wfile.write("\nContent-Length: 0\nConnection: close\n\n")
             self.close_connection = 1
             return f
-        IDTran = None
-        if self.path!='/favicon.ico' :
+        self.IDTran = None
+        if  self.path!='/favicon.ico' and not self.path[1:] in ReadmeLst:
             if self.path[1+8] != "$" : #False:
                 # Address to the local buyer
                 self.wfile.write("HTTP/1.1 303 See Other\nLocation: http://localhost:8120"+self.path)
