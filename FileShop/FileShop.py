@@ -261,7 +261,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.close_connection = 1
             return f
         self.IDTran = None
-        if  self.path!='/favicon.ico' and not self.path[1:] in ReadmeLst:
+        if  self.path!='/favicon.ico' and not fname in ReadmeLst:
             if self.path[1+8] != "$" : #False:
                 # Address to the local buyer
                 self.wfile.write("HTTP/1.1 303 See Other\nLocation: http://localhost:8120"+self.path)
