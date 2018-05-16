@@ -28,7 +28,7 @@ https://www.python.org/downloads/release/python-2713/
 https://pypi.python.org/pypi/win_inet_pton
 https://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.9.4
 
-http://212.237.6.204:8008 - first shop
+http://212.237.59.83:8008 - first shop
 
  Плагины к https://electrum-ltc.org/
  Этот плагины предназначены для удобной купли/продажи дешевых файлов. 
