@@ -1,6 +1,6 @@
 # LTCFileShopPlugin
 
- Plugins of https://electrum-ltc.org/
+ Plugins of https://electrum-ltc.org/download/Electrum-LTC-2.9.3.1.tar.gz
  This plugins is designed for convenient purchase/sale of cheap files.
  The Litecoin was selected because of low fee.
  The file is given instantly to the transaction.
@@ -30,7 +30,7 @@ https://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.9.4
 
 http://212.237.59.83:8008 - first shop
 
- Плагины к https://electrum-ltc.org/
+ Плагины к https://electrum-ltc.org/download/Electrum-LTC-2.9.3.1.tar.gz
  Этот плагины предназначены для удобной купли/продажи дешевых файлов. 
  Лайткоин выбран из-за низкой комиссии.
  Файл отдается мгновенно за транзакцию.
