@@ -1,6 +1,7 @@
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-import PyQt4.QtCore as QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+import PyQt5.QtCore as QtCore
+from PyQt5.QtWidgets import (QLabel, QVBoxLayout)
 
 from electrum_ltc.plugins import BasePlugin, hook
 from electrum_ltc_gui.qt.util import WindowModalDialog , Buttons , CancelButton, OkButton , EnterButton
@@ -10,22 +11,31 @@ from electrum_ltc.transaction import Transaction
 
 from functools import partial
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+#from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-import socket
-import SocketServer
+
+#import socket
+#import SocketServer
+import socketserver
+
 import threading
 import sys
 import datetime
 import time
 import inspect
 
-quest_obj = QObject()
+#quest_obj = QObject()
 quest_result = None
 quest_recv = None
 raw_xt = None
 fuse = 1.
 BuyPw =  None
+
+class QFShopObject(QObject):
+    Buyer_signal = pyqtSignal()
+
+quest_obj = pyqtSignal()
 
 def dset(d):
     d.setWindowState(Qt.WindowActive)
@@ -38,21 +48,20 @@ def dset(d):
 
 class GetHandler(BaseHTTPRequestHandler):
 
-    global quest_obj
-
     def __init__(self, request, client_address, server):
         BaseHTTPRequestHandler.__init__(self, request, client_address, server)
              
     def do_GET(self):
+        global quest_obj
         global quest_result
         global quest_recv
         global raw_xt
-        myreferer =  self.headers.get('referer', "").split('/') #  ['http:', '', 'localhost:8008', '']
+        myreferer =  self.headers.get('referer', "").split('/')
         self.BTCTransaction = "123" # " BTC Transaction "
         #print("myreferer=",myreferer)
 
         if  len(myreferer) > 1: 
-            self.wfile.write("HTTP/1.1 303 See Other\n")
+            self.wfile.write(b"HTTP/1.1 303 See Other\n")
             BShop = myreferer[2].split(':')
             BShopPort = 80
             if len(BShop) == 2:
@@ -66,19 +75,20 @@ class GetHandler(BaseHTTPRequestHandler):
             bsocet.connect((BShop[0],BShopPort))
             httpsend = "GET " + "/ltc00000$" +self.path + "\r\n\r\n" 
             #print("TransactionParam parameters query",httpsend,">")
-            bsocet.send(httpsend)
+            bsocet.send(httpsend.encode('latin-1', 'strict'))
             quest_recv =  bsocet.recv(1024).rstrip()
             #print ("TransactionParam=",quest_recv)
             bsocet.close()
 
-            precv = quest_recv.split(';')
+            precv = quest_recv.decode().split(';')
             tquestion = "Amount = %sLTC\nFee = %sLTC\nTime = %s"%( precv[0],precv[1], str(datetime.datetime.fromtimestamp(float( precv[2]))) )
 
             if float(precv[0]) + float(precv[1]) > fuse:
                 self.send_error(404, "the fuse has tripped")
                 return
             quest_result = None
-            quest_obj.emit(SIGNAL('BuyerServerSig'))
+            quest_obj.Buyer_signal.emit()
+#            quest_obj.emit(SIGNAL('BuyerServerSig'))
             while quest_result == None:
                 time.sleep(0.1)
             if not quest_result:
@@ -91,7 +101,7 @@ class GetHandler(BaseHTTPRequestHandler):
             bsocet.connect((BShop[0],BShopPort))
             httpsend = "PUT$" + self.BTCTransaction + "\r\n\r\n"
             #print("Transaction send",httpsend)
-            bsocet.send(httpsend)
+            bsocet.send(httpsend.encode('latin-1', 'strict'))
             rcv = bsocet.recv(4)
             print ("Shop Answer=",rcv)
             bsocet.close()
@@ -102,19 +112,19 @@ class GetHandler(BaseHTTPRequestHandler):
             csum %= 0x10**8
             httpsend = "Location: " + myreferer[0] + "//" +  myreferer[2] + "/%08X$"%csum +self.path 
             #print("to browser",csum,httpsend,">")
-            self.wfile.write(httpsend)
-            self.wfile.write("\nContent-Length: 0\nConnection: close\n\n")
+            self.wfile.write(httpsend.encode('latin-1', 'strict'))
+            self.wfile.write("\nContent-Length: 0\nConnection: close\n\n".encode('latin-1', 'strict'))
         return
        
         self.send_response(200)
         self.end_headers()
-        self.wfile.write('Hello')
+        self.wfile.write(b'Hello')
         return
 
     def send_header(self, keyword, value):
         """Send a MIME header."""
         if self.request_version != 'HTTP/0.9':
-            self.wfile.write("%s: %s\r\n" % (keyword, value))
+            self.wfile.write(("%s: %s\r\n" % (keyword, value)).encode('latin-1', 'strict'))
 
         if keyword.lower() == 'connection':
             if value.lower() == 'close':
@@ -135,13 +145,17 @@ class BuyerServer(QThread):
         self.server.server_close()
         self.quit()
 
+
+
 class Plugin(BasePlugin):
-    global quest_obj
     Server = None
     def __init__(self, parent, config, name):
+        global quest_obj
         BasePlugin.__init__(self, parent, config, name)
-        self.obj = QObject()
-        self.obj.connect(quest_obj, SIGNAL('BuyerServerSig'), self.new_question)
+#        self.obj = QObject()
+#        self.obj.connect(quest_obj, SIGNAL('BuyerServerSig'), self.new_question)
+        quest_obj = QFShopObject()
+        quest_obj.Buyer_signal.connect(self.new_question)
               
         if(self.Server == None):
             self.Server = BuyerServer()
@@ -184,7 +198,7 @@ class Plugin(BasePlugin):
         global BuyPw
         global raw_xt
 
-        self.precv = quest_recv.split(';')
+        self.precv = quest_recv.decode().split(';')
         ufee = int( float(self.precv[1]) * 1e8 )
         coins = self.window.get_coins()
         outputs = [(0,self.precv[3],int( float(self.precv[0]) * 1e8 ))]
@@ -208,7 +222,7 @@ class Plugin(BasePlugin):
                 raw_xt = quest_tx.__str__()
             else:
                 while 1:
-                    quest_tx = self.window.wallet.make_unsigned_transaction(coins, outputs, self.window.config, fee)
+                    quest_tx = self.window.wallet.make_unsigned_transaction(coins, outputs, self.window.config, int(fee))
                     self.window.wallet.sign_transaction(quest_tx, BuyPw)
                     raw_xt = quest_tx.__str__()
                     tlen = len( raw_xt ) / 2
@@ -246,7 +260,6 @@ Fee = %sLTC
 '''%( amount / 1e8  , fee / 1e8)
                 
         quest_result = self.new_contact_dialog()
-	#quest_result = self.window.password_dialog(self.tquestion, parent = self.window.top_level_window())
 
         print('dialog=', quest_result)
         

@@ -1,4 +1,3 @@
-
 from electrum_ltc.plugins import BasePlugin, hook
 from electrum_ltc.util import *
 
@@ -6,22 +5,20 @@ from functools import partial
 
 from electrum_ltc.transaction import Transaction
 
-import SimpleHTTPServer
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import http.server
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import socketserver
+from socketserver     import ThreadingMixIn
+from http import HTTPStatus
 
-import socket
-import SocketServer
-from SocketServer     import ThreadingMixIn
+
 import threading
 import cgi
 import os, sys, posixpath
 import datetime
 import time
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+import io
 
 NFlPrice = 0.04
 NFlTrFee = 0.001
@@ -63,7 +60,8 @@ FileShopPath = FileShop_path()
 TLock = threading.Lock()
 
 
-class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+#class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class FSHandler(http.server.SimpleHTTPRequestHandler):
     
     def __init__(self, request, client_address, server):
         BaseHTTPRequestHandler.__init__(self, request, client_address, server)
@@ -83,7 +81,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         path = path.split('#',1)[0]
         # Don't forget explicit trailing slash when normalizing. Issue17324
         trailing_slash = path.rstrip().endswith('/')
-        path = posixpath.normpath(urllib.unquote(path))
+        path = posixpath.normpath(urllib.parse.unquote(path))
         words = path.split('/')
         words = filter(None, words)
         path = FileShopPath # os.getcwd()
@@ -111,12 +109,19 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_error(404, "No permission to list directory")
             return None
         list.sort(key=lambda a: a.lower())
-        f = StringIO()
-        displaypath = cgi.escape(urllib.unquote(self.path))
-        f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
-        f.write("<html>\n<title>File Shop %s</title>\n" % displaypath)
-        f.write("<body>\n<h2>The running <a href=\"https://github.com/mak4444/LTCFileShopPlugin\">Electrum-ltc plugin</a> is needed for downloading</h2>\n")
-        f.write("<hr>\n<ul>\n<table border=\"1\"> <tr> <th>Name</th><th>Size</th><th>Modify time</th> <th>Price LTC</th>  <th>Tr Fee LTC/kB </th> </tr>")
+        r = []
+        displaypath = cgi.escape(urllib.parse.unquote(self.path))
+        enc = sys.getfilesystemencoding()
+        r.append('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
+        r.append('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" '
+                 '"http://www.w3.org/TR/html4/strict.dtd">')
+        r.append('<html>\n<head>')
+        r.append('<meta http-equiv="Content-Type" '
+                 'content="text/html; charset=%s">' % enc)
+
+        r.append("<title>File Shop %s</title>\n" % displaypath)
+        r.append("<body>\n<h2>The running <a href=\"https://github.com/mak4444/LTCFileShopPlugin\">Electrum-ltc plugin</a> is needed for downloading</h2>\n")
+        r.append("<hr>\n<ul>\n<table border=\"1\"> <tr> <th>Name</th><th>Size</th><th>Modify time</th> <th>Price LTC</th>  <th>Tr Fee LTC/kB </th> </tr>")
         for name in list:
             fullname = os.path.join(path, name)
             displayname = linkname = name
@@ -145,16 +150,17 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if os.path.islink(fullname):
                 displayname = name + "@"
                 # Note: a link to a directory displays with @ and links with /
-            f.write('<tr><td><li><a href="%s">%s</a></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'
-                    % (urllib.quote(linkname), cgi.escape(displayname), filesize ,
+            r.append('<tr><td><li><a href="%s">%s</a></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n'
+                    % (urllib.parse.quote(linkname), cgi.escape(displayname), filesize ,
                        str(datetime.datetime.fromtimestamp(os.path.getmtime(fullname))) , HFlPrice , HFlTrFee  ) )
-        f.write("</table></ul>\n<hr>\n</body>\n</html>\n")
-        length = f.tell()
+        r.append("</table></ul>\n<hr>\n</body>\n</html>\n")
+        encoded = '\n'.join(r).encode(enc, 'surrogateescape')
+        f = io.BytesIO()
+        f.write(encoded)
         f.seek(0)
-        self.send_response(200)
-        encoding = sys.getfilesystemencoding()
-        self.send_header("Content-type", "text/html; charset=%s" % encoding)
-        self.send_header("Content-Length", str(length))
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-type", "text/html; charset=%s" % enc)
+        self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
         return f
 
@@ -162,7 +168,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return 1
     
     def do_PUT(self):
-	global Tr4del
+        global Tr4del
         csum = 0
         for char in self.RowTransaction:
             csum += csum + ord(char)
@@ -181,7 +187,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             del Tr4del[0]
 
         Transactions[csum]=self.RowTransaction # self.TransactionTst()
-        self.wfile.write("ok\r\n")
+        self.wfile.write(b"ok\r\n")
         Tr4del.append(csum)        
 
     def handle_one_request(self):
@@ -203,8 +209,8 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self.send_error(414)
                 return
             count = 1
-            
-            words = self.raw_requestline.split('$')
+            print("raw_requestline=",self.raw_requestline)
+            words = self.raw_requestline.decode().split('$')
             self.command = ""
             if len(words) == 2:
                 self.command , self.RowTransaction = words
@@ -227,7 +233,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             method = getattr(self, mname)
             method()
             self.wfile.flush() #actually send the response if not already done.
-        except socket.timeout, e:
+        except socket.timeout:
             #a read or a write timed out.  Discard this connection
             self.log_error("Request timed out: %r", e)
             self.close_connection = 1
@@ -245,29 +251,28 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         None, in which case the caller has nothing further to do.
 
         """
-        #for name, value in self.headers.items():
-        #    print('mmo%s=%s' % (name, value.rstrip()))
         path,fname = self.translate_path(self.path)
         f = None
-        #print("mmopath=<",path,">")
+        print("mmopath=<",path,">")
         if os.path.isdir(path):
-            parts = urlparse.urlsplit(self.path)
+            parts = urllib.parse.urlsplit(self.path)
             return self.list_directory(path)
             
         #print("mmoself.path=<",self.path,">")
         if len(self.path) < 8 :
-            self.wfile.write("HTTP/1.1 303 See Other\nLocation: http://localhost:8120"+self.path)
-            self.wfile.write("\nContent-Length: 0\nConnection: close\n\n")
-            self.close_connection = 1
+            self.wfile.write(("HTTP/1.1 303 See Other\nLocation: http://localhost:8120"+self.path).encode('latin-1', 'strict') )
+            self.wfile.write(b"\nContent-Length: 0\nConnection: close\n\n")
+            self.close_connection = True
+            print("mmoself.path<8",self.path,f)
             return f
         self.IDTran = None
         if  self.path!='/favicon.ico' and not fname in ReadmeLst:
             if self.path[1+8] != "$" : #False:
                 # Address to the local buyer
-                self.wfile.write("HTTP/1.1 303 See Other\nLocation: http://localhost:8120"+self.path)
-                self.wfile.write("\nContent-Length: 0\nConnection: close\n\n")
-                #self.end_headers()
-                self.close_connection = 1
+                self.wfile.write(("HTTP/1.1 303 See Other\nLocation: http://localhost:8120"+self.path).encode('latin-1', 'strict') )
+                self.wfile.write(b"\nContent-Length: 0\nConnection: close\n\n")
+                self.close_connection = True
+                print("mmoself.path != $",self.path,f)
                 return f
              
             if self.path[1:9]=='ltc00000': # What transaction do you need?
@@ -291,16 +296,16 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 FileID = 0
                 for char in self.path:
                     FileID += ord(char)
-                #print('FileID',FileID,self.path)
+                print('mmoFileID',FileID,self.path)
                 FilePP[FileID] = (HFlPrice,HFlTrFee,time.mktime(time.gmtime()))
-                self.wfile.write("%s;%s;%s;%s\r\n"%(HFlPrice,HFlTrFee,time.mktime(time.gmtime()),ReceivAddress))
+                self.wfile.write(("%s;%s;%s;%s\r\n"%(HFlPrice,HFlTrFee,time.mktime(time.gmtime()),ReceivAddress)).encode('latin-1', 'strict'))
                 return f
             
             try:
-                #print('IDTransactions=',self.path[1:9])
+                #print('mmoIDTransactions=',self.path[1:9])
                 self.IDTran = int(self.path[1:9],base=16)
                 self.RowTransaction = Transactions[self.IDTran]
-                #print('Transactions=',self.RowTransaction)
+                #print('mmoTransactions=',self.RowTransaction)
                 
             #except KeyError:
             except :
@@ -311,7 +316,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             for char in self.path[10:]:
                 self.FileID += ord(char)                
             
-            #print('self.FileID',self.FileID,self.path[10:])
+            print('mmoself.FileID',self.FileID,self.path[10:])
             
             path= self.path.split('$')[1]
             path,fname = self.translate_path(path)           
@@ -344,6 +349,7 @@ class FSHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             f.close()
             raise
 
-class ThreadedHTTPServer(ThreadingMixIn, SocketServer.TCPServer):
+class ThreadedHTTPServer(ThreadingMixIn, socketserver.TCPServer):
     """Handle requests in a separate thread."""
 
+#sudo apt-get install python3-pyqt5

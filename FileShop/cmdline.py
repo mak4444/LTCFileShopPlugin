@@ -8,12 +8,10 @@ from functools import partial
 
 from electrum_ltc.transaction import Transaction
 
-import SimpleHTTPServer
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-
-import socket
-import SocketServer
-from SocketServer     import ThreadingMixIn
+import http.server
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import socketserver
+from socketserver     import ThreadingMixIn
 import threading
 from threading  import *
 import cgi
@@ -21,8 +19,8 @@ import os, sys, posixpath
 import datetime
 import time
 
-import FileShop
-from FileShop import *
+import FileShop.FileShop as FFS
+from FileShop.FileShop import *
 
 Tx_IOSave = {}
 ST4del = []
@@ -40,9 +38,9 @@ class CmFSHandler(FSHandler):
             XTr = Transaction(GRowTransaction)
         except:
             return 0
-        print('XTr = ',XTr)
+        #print('XTr = ',XTr)
 
-        Flv , FLfee , TTime = FileShop.FilePP[GFileID]
+        Flv , FLfee , TTime = FFS.FilePP[GFileID]
         if( Flv + FLfee == 0. ):
             return 1
         
@@ -75,9 +73,9 @@ class CmFSHandler(FSHandler):
                             fee += int( y['value'])
 
                 for addr, value in XTr.get_outputs():
-                    print('get_outputs=',addr, value , FileShop.ReceivAddress )
+                    print('get_outputs=',addr, value , FFS.ReceivAddress )
                     fee -= value
-                    if addr == FileShop.ReceivAddress:
+                    if addr == FFS.ReceivAddress:
                         amount += value
 
                 if len(ST4del) > 9:
@@ -113,11 +111,10 @@ class CmFSHandler(FSHandler):
         global GRowTransaction
         global GFileID
 
-        #FileShop.TLock.acquire()
         GRowTransaction = self.RowTransaction
         GFileID = self.FileID
 
-        print('TransactionTst=', GRowTransaction )
+        #print('TransactionTst=', GRowTransaction )
         self.netw = None
 
         Txres = self.Tx_test()
@@ -137,35 +134,28 @@ class FileServer(Thread):
 
         self.server = ThreadedHTTPServer(('', 8008), CmFSHandler)
         self.server.serve_forever()
+
        
 class Plugin(BasePlugin):
     Server = None
     print('FS cmdl Plugin')
     def __init__(self, parent, config, name):
         print('FS cmdl Plugin ini')
-        global FlPrice
-        global FlTrFee
-        global ReceivAddress
         
         BasePlugin.__init__(self, parent, config, name)
 
-        FileShop.NFlPrice = self.config.get('NFlPrice', FileShop.NFlPrice)
-        FileShop.NFlTrFee = self.config.get('NFlTrFee', FileShop.NFlTrFee)
 
-        FileShop.FlPrice = self.config.get('FlPrice', FileShop.FlPrice)
-        FileShop.FlTrFee = self.config.get('FlTrFee', FileShop.FlTrFee)
+        FFS.NFlPrice = self.config.get('NFlPrice', FFS.NFlPrice)
+        FFS.NFlTrFee = self.config.get('NFlTrFee', FFS.NFlTrFee)
+        FFS.NFlTrFee = self.config.get('NFlTrFee', FFS.NFlTrFee)
+        FFS.FlPrice = self.config.get('FlPrice',   FFS.FlPrice)
+        FFS.FlTrFee = self.config.get('FlTrFee',   FFS.FlTrFee)
+        FFS.OFlPrice = self.config.get('OFlPrice', FFS.OFlPrice)
+        FFS.OFlTrFee = self.config.get('OFlTrFee', FFS.OFlTrFee)
+        FFS.MemPoolLimit = self.config.get('MemPoolLimit',   FFS.MemPoolLimit)       
+        FFS.ReceivAddress = self.config.get('ReceivAddress', FFS.ReceivAddress)
 
-        FileShop.OFlPrice = self.config.get('OFlPrice', FileShop.OFlPrice)
-        FileShop.OFlTrFee = self.config.get('OFlTrFee', FileShop.OFlTrFee)
-
-        FileShop.MemPoolLimit = self.config.get('MemPoolLimit', FileShop.MemPoolLimit)       
-        
-        FileShop.ReceivAddress = self.config.get('ReceivAddress', FileShop.ReceivAddress)
-                      
-        if(self.Server == None):
+        if self.Server == None :
             self.Server = FileServer()
             self.Server.start()
 
-
-    
-    
