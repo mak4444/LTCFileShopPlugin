@@ -68,7 +68,7 @@ class GetHandler(BaseHTTPRequestHandler):
             #print("TransactionParam parameters query",httpsend,">")
             bsocet.send(httpsend)
             quest_recv =  bsocet.recv(1024).rstrip()
-            #print ("TransactionParam=",quest_recv)
+            print ("mmoTransactionParam=",quest_recv)
             bsocet.close()
 
             precv = quest_recv.split(';')

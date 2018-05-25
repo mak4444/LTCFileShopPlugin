@@ -310,7 +310,7 @@ class Plugin(BasePlugin):
             if amount >  MemPoolLimit * 1e8 :
                 status, msg = None,None
                 try:
-                    status, msg =  self.netw.broadcast(XTr)
+                    status, msg =  self.window.network.broadcast(XTr)
                     print('broadcast_try=',status, msg)
                 except:
                     pass            
