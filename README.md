@@ -30,6 +30,8 @@ https://sourceforge.net/projects/pyqt/files/PyQt5
 
 http://212.237.59.83:8008 - first shop
 
+https://sites.google.com/view/industry-4-1-roboholding Индустрия 4.1 - роботовладение
+
  Плагины к https://electrum-ltc.org
  Этот плагины предназначены для удобной купли/продажи дешевых файлов. 
  Лайткоин выбран из-за низкой комиссии.
