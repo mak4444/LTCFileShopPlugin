@@ -28,7 +28,7 @@ https://www.python.org/downloads/release/python-365/
 https://pypi.python.org/pypi/win_inet_pton
 https://sourceforge.net/projects/pyqt/files/PyQt5
 
-http://212.237.59.83:8008 - first shop
+http://176.118.164.140:8008 - first shop
 
 https://sites.google.com/view/industry-4-1-roboholding Индустрия 4.1 - роботовладение
 
