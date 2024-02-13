@@ -56,3 +56,4 @@ https://sites.google.com/view/industry-4-1-roboholding Индустрия 4.1 - 
 
  http://fpauk.narod.ru/LTCFileShopPlugin-p2.zip for https://electrum-ltc.org/download/Electrum-LTC-2.9.3.1.tar.gz
 
+https://www.youtube.com/watch?v=IS6nphzMrSo&t=20s
